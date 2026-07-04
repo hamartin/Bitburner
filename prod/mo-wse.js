@@ -8,13 +8,10 @@
 // The game has some weird inertia thing going on, meaning that it takes a while
 // to turn etc, so safe values seem to be .45 for short and .55 for long and .50
 // for selling the long/shorts.
-//
-// If you want more profitt, but a lot more volatility in your wallet you can
-// run the following numbers => .53 for buy long, .48 for sell long, 0.47 buy
-// short and .52 sell short.
-//
-// Defaults gave me 312b in 20 minutes for my test.
-// Aggressive settings gave me 
+
+// TODO: The game will refuse to go long on a symbol if you are allready shorted
+// and vice versa. So we need to add logic to get rid of the trade in opposite
+// direction if one exist allready.
 
 // I use this as an "enum" for logging purposes so that I can get
 // colored output.

@@ -118,7 +118,7 @@ function getNumberOfCrackingPrograms(ns, crackingPrograms) {
 }
 
 export function hackHosts(ns, hosts, crackingPrograms) {
-    for (const host of hosts.keys()) {
+    for (const host of hosts) {
         for (const [program, func] of crackingPrograms) {
             if (ns.fileExists(program, "home")) {
                 func(host);
@@ -202,7 +202,10 @@ export async function main(ns) {
             numberOfHackingServers = hackingServers.length;
             for (const host of hackingServers) {
                 // We don't want to overwrite the source file.
-                if (host != ns.getHostname()) copyVirusToHackingServer(ns, host, PAYLOADS.ALLINONEGO);
+                if (host != ns.getHostname()) {
+                    copyVirusToHackingServer(ns, host, PAYLOADS.ALLINONEGO);
+                    ns.killall(host);
+                }
                 // Start the script we just copied.
                 let pid = undefined;
                 if (pid_list.has(host)) pid = pid_list.get(host);
