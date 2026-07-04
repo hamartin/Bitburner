@@ -61,8 +61,12 @@ export async function main(ns) {
             // Checking if there is a next tier, and if not, we stop the while loop.
             const ramTier = ns.getServerMaxRam(smallest);
             const nextRamTier = ramTiers.find(r => r > ramTier);
+
             // If theres no next tier on the smallest cloud server,
             // then this script is done with its job.
+            // We could compare ramTier with ns.getRamLimit() also, but
+            // I don't see a reason for doing this since I allready
+            // have the same end result with nextRamTier.
             if (!nextRamTier) break;
 
             // We check the cost of the next tier, and if we can afford it, we upgrade the server.

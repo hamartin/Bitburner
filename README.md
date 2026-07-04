@@ -7,6 +7,10 @@ All of the code is my interpretation of code found on forums, Youtube
 and asking AI basic questions on how Javascript does things I know
 how to do in Python.
 
+Also, the goal is not to make super efficient code, only to beat the game in a
+way I can understand it. So my choices might not make sense for someone who
+actually knows how to code.
+
 
 ## Scripts
 Currently there are 2 main scripts. The `mo-controller.js` and `mo-cloudservers.js`.
