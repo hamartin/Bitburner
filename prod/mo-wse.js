@@ -73,6 +73,11 @@ export async function main(ns) {
                 if (shares > 0) {
                     const cost = shares * price;
                     if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
+                        // Before we can go long, we have to cover any
+                        // shorts we have on the same symbol/stock.
+                        if(shortShares > 0) {
+                            ns.stock.buyShort(symbol, shortShares);
+                        }
                         ns.stock.buyStock(symbol, shares);
                         ns.tprint(LOG_LEVEL.SUCCESS + `Bought (LONG) ${shares} ${symbol} @ ${price}`);
                     }
@@ -83,7 +88,9 @@ export async function main(ns) {
             if (forecast < sellLongThreshold && longShares > 0) {
                 ns.stock.sellStock(symbol, longShares);
                 const profit = (price - longAveragePrice) * longShares;
-                ns.tprint(LOG_LEVEL.SUCCESS + `Sold (LONG) ${longShares} ${symbol} for profit ${ns.format.number(profit)}`);
+                let text = "profit";
+                if (profit < 0) text = "loss";
+                ns.tprint(LOG_LEVEL.SUCCESS + `Sold (LONG) ${longShares} ${symbol} for a ${text} of ${ns.format.number(profit)}`);
             }
 
             // Woohoo, forecast says short the symbol/stock.
@@ -98,6 +105,11 @@ export async function main(ns) {
                         // price goes down, buy them back later and return the
                         // stock. Thats why we are selling the short when
                         // initiating the trade.
+                        // Also, we need to get rid of any long trades
+                        // on the same symbol/stock, before going short.
+                        if (longShares > 0) {
+                            ns.stock.sellStock(symbol, longShares);
+                        }
                         ns.stock.sellShort(symbol, shares);
                         ns.tprint(LOG_LEVEL.SUCCESS + `Bought (SHORTED) ${shares} ${symbol} @ ${price}`);
                     }
@@ -113,7 +125,9 @@ export async function main(ns) {
                 // closing/cover the initial trade.
                 ns.stock.buyShort(symbol, shortShares);
                 const profit = (price - shortAveragePrice) * shortShares;
-                ns.tprint(LOG_LEVEL.SUCCESS + `Sold (SHORTED)  ${shortShares} ${symbol} for profit ${ns.format.number(profit)}`);
+                let text = "profit";
+                if (profit < 0) text = "loss";
+                ns.tprint(LOG_LEVEL.SUCCESS + `Sold (SHORTED)  ${shortShares} ${symbol} for a ${text} of ${ns.format.number(profit)}`);
             }
         }
         await ns.sleep(sleepTime);
