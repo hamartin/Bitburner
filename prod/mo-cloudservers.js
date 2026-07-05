@@ -12,9 +12,10 @@ const LOG_LEVEL = Object.freeze({
     "DEBUG": "DEBUG: ",
 });
 
-// The different amount of RAM you can have on a cloud purchased server.
+// The different amount of RAM you can have on a cloud purchased server. We are
+// ignoring the 2GB alternative as almost all scripts will be bigger than this.
 const ramTiers = [
-    8, 16, 32, 64, 128, 256, 512,
+    4, 8, 16, 32, 64, 128, 256, 512,
     1024, 2048, 4096, 8192, 16384,
     32768, 65536, 131072, 262144,
     524288, 1048576,
