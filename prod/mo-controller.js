@@ -27,7 +27,6 @@ const PAYLOADS = Object.freeze({
 // Copies the virtus and kills any running scripts of the same kind if
 // allready running on the target host.
 async function copyVirusToHackingServer(ns, hostName, virusFileName) {
-    ns.tprint(LOG_LEVEL.INFO + `Copying ${virusFileName} to ${hostName}`);
     await ns.scp(virusFileName, hostName);
 }
 
