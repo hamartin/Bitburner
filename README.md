@@ -11,6 +11,11 @@ Also, the goal is not to make super efficient code, only to beat the game in a
 way I can understand it. So my choices might not make sense for someone who
 actually knows how to code.
 
+As I am writing more and more code and I am starting to learn a bit, I see that
+I am taking doing a lot in the code which is unnecessary, but I do it anyway to
+get a feel for the language and working my self through each challenge I see in
+front of me.
+
 
 ## Scripts
 Currently there are 4 main scripts. The `mo-controller.js`,

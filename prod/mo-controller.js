@@ -2,6 +2,14 @@
  * @typedef {(host: string) => void} CrackFunction
  */
 
+/**
+ * @typedef {Set<String>} ServerSet
+ */
+
+/**
+ * @typedef {Map<String, Number>} ServerRamMap
+ */
+
 //
 // Global constants
 //
@@ -186,6 +194,9 @@ export async function main(ns) {
     //
 
     // Maps the filename in the terminal to the Netscript function.
+    /**
+     * @type {Map<String, CrackFunction>}
+     */
     const CRACKING_PROGRAMS = new Map([
         ["BruteSSH.exe", ns.brutessh],
         ["FTPCrack.exe", ns.ftpcrack],
@@ -219,11 +230,11 @@ export async function main(ns) {
         }
     }
 
-    /** @type {Set<String>} */
+    /** @type {ServerSet} */
     const knownHackingServers = new Set([]);
-    /** @type {Set<String>} */
+    /** @type {ServerSet} */
     const knownCloudServers = new Set([]);
-    /** @type {Map<String, Number>} */
+    /** @type {ServerRamMap} */
     const knownCloudServersRam = new Map();
     while (true) {
         // Get information about all the hosts we can see on the
