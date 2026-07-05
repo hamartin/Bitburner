@@ -203,6 +203,9 @@ export async function main(ns) {
                 // We don't want to overwrite the source file.
                 if (host != ns.getHostname()) {
                     copyVirusToHackingServer(ns, host, PAYLOADS.ALLINONEGO);
+                    copyVirusToHackingServer(ns, host, PAYLOADS.GROW);
+                    copyVirusToHackingServer(ns, host, PAYLOADS.HACK);
+                    copyVirusToHackingServer(ns, host, PAYLOADS.WEAKEN);
                     ns.killall(host);
                 }
                 // Start the script we just copied.
