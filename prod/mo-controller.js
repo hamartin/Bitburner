@@ -212,7 +212,7 @@ export async function main(ns) {
 
     // Target host is a requirement. If one is not given, we print a usage message and quit.
     if (!targetHost) {
-        ns.tprint(LOG_LEVEL.ERROR + "Usage: run mo-controller.js <TARGET HOST> <CLOUD SERVER NAME PREFIX> <SLEEP TIME>");
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> <CLOUD SERVER NAME PREFIX> <SLEEP TIME>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t<CLOUD SERVER NAME PREFIX>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to Vogon-");
         ns.tprint(LOG_LEVEL.ERROR + "\t<SLEEP TIME>:");

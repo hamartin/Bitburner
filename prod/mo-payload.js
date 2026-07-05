@@ -26,7 +26,7 @@ export async function main(ns) {
 
     // Target host is a requirement. We simply exit with a usage message if one is not given.
     if (!targetHost) {
-        ns.tprint(LOG_LEVEL.ERROR + "Usage: run mo-payload.js <TARGET HOST NAME> <MAX MONEY MULTIPLIER> <SECURITY THRESHOLD ADD>");
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST NAME> <MAX MONEY MULTIPLIER> <SECURITY THRESHOLD ADD>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t<MAX MONEY MULTIPLIER>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Optional and defaults to 0.75");
         ns.tprint(LOG_LEVEL.ERROR + "\t<SECURITY THRESHOLD ADD>:");

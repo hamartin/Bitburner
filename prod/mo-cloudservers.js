@@ -31,7 +31,7 @@ export async function main(ns) {
     ns.ui.openTail();
 
     ns.print(LOG_LEVEL.INFO + "Note that you can override default settings.");
-    ns.print(LOG_LEVEL.INFO + "Usage: run mo-cloudservers.js <SERVER NAME PREFIX> <SLEEP TIME>");
+    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} <SERVER NAME PREFIX> <SLEEP TIME>`);
     ns.print(LOG_LEVEL.INFO + "\t<SERVER NAME PREFIX:");
     ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to Vogon-");
     ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");

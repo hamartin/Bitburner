@@ -37,7 +37,7 @@ export async function main(ns) {
 
     ns.ui.openTail();
 
-    ns.print(LOG_LEVEL.INFO + "Usage: run mo-wse.js <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>");
+    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>`);
     ns.print(LOG_LEVEL.INFO + "\t<SHORTING ENABLED>:");
     ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to false.");
     ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
