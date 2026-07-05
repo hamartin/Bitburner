@@ -1,4 +1,8 @@
 /**
+ * @typedef {{ targetHost: String, serverNamePrefix: String, sleepTime: Number }} MyFlags
+ */
+
+/**
  * @typedef {(host: string) => void} CrackFunction
  */
 
@@ -205,13 +209,15 @@ export async function main(ns) {
         ["SQLInject.exe", ns.sqlinject],
     ]);
 
-    // Script arguments which is used throughout the script.
-    const targetHost = ns.args[0] ? String(ns.args[0]) : "";
-    const serverNamePrefix = ns.args[1] ? String(ns.args[1]) : "Vogon-";
-    const sleepTime = ns.args[2] ? Number(ns.args[2]) : 10000;
+    /** @type {MyFlags} */
+    const flags = /** @type {MyFlags} */ (ns.flags([
+        ["targetHost", ""],
+        ["serverNamePrefix", "Vogon-"],
+        ["sleepTime", 10000],
+    ]));
 
     // Target host is a requirement. If one is not given, we print a usage message and quit.
-    if (!targetHost) {
+    if (!flags.targetHost) {
         ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> <CLOUD SERVER NAME PREFIX> <SLEEP TIME>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t<CLOUD SERVER NAME PREFIX>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to Vogon-");
@@ -263,13 +269,13 @@ export async function main(ns) {
             await ns.scp(PAYLOADS.HACK, host);
             await ns.scp(PAYLOADS.GROW, host);
             await ns.scp(PAYLOADS.WEAKEN, host);
-            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
+            killAllProcessesAndRunScript(ns, host, flags.targetHost, PAYLOADS.ALLINONEGO);
         }
 
         // This part is identical to the hacking servers part above with the
         // exception of tracking the cloud servers RAM so that we can kill and
         // rerun scripts using all the host RAM.
-        const currentCloudServers = getCloudServerHostNames(ns, serverNamePrefix);
+        const currentCloudServers = getCloudServerHostNames(ns, flags.serverNamePrefix);
         const newCloudServers = currentCloudServers.filter(host => !knownCloudServers.has(host));
         knownCloudServers.clear();
         for (const host of currentCloudServers) knownCloudServers.add(host);
@@ -279,7 +285,7 @@ export async function main(ns) {
             await ns.scp(PAYLOADS.HACK, host);
             await ns.scp(PAYLOADS.GROW, host);
             await ns.scp(PAYLOADS.WEAKEN, host);
-            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
+            killAllProcessesAndRunScript(ns, host, flags.targetHost, PAYLOADS.ALLINONEGO);
 
             // New cloud server. We need to get the RAM size and store it to the
             // map for later use and comparison.
@@ -292,14 +298,14 @@ export async function main(ns) {
 
             if (previousRam === undefined || previousRam !== currentRam) {
                 knownCloudServersRam.set(currentCloudServer, currentRam);
-                killAllProcessesAndRunScript(ns, currentCloudServer, targetHost, PAYLOADS.ALLINONEGO);
+                killAllProcessesAndRunScript(ns, currentCloudServer, flags.targetHost, PAYLOADS.ALLINONEGO);
             }
         }
 
         // Putting a sleep here as we do not need this script to run at
         // full speed. I'm ok with it running every second to reduce
         // how often the script evaulates the current state.
-        await ns.sleep(sleepTime);
+        await ns.sleep(flags.sleepTime);
     }
 }
 

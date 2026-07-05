@@ -14,6 +14,10 @@
 // and vice versa. So we need to add logic to get rid of the trade in opposite
 // direction if one exist allready.
 
+/**
+ * @typedef {{ shortingEnabled: Boolean, sleepTime: Number, openLongThreshold: Number, closeLongThreshold: Number, openShortThreshold: Number, closeShortThreshold: Number }} MyFlags
+ */
+
 // I use this as an "enum" for logging purposes so that I can get
 // colored output.
 const LOG_LEVEL = Object.freeze({
@@ -28,12 +32,15 @@ const LOG_LEVEL = Object.freeze({
  * @param {NS} ns 
  */
 export async function main(ns) {
-    const shortingEnabled = ns.args[0] ? true : false;
-    const sleepTime = ns.args[1] ? Number(ns.args[1]) : 1000;
-    const openLongThreshold = ns.args[2] ? Number(ns.args[2]) : .55;
-    const closeLongThreshold = ns.args[3] ? Number(ns.args[3]) : .50;
-    const openShortThreshold = ns.args[4] ? Number(ns.args[4]) : .45;
-    const closeShortThreshold = ns.args[5] ? Number(ns.args[5]) : .50;
+    /** @type {MyFlags} */
+    const flags = /** @type {MyFlags} */ (ns.flags([
+        ["shortingEnabled", false],
+        ["sleepTime", 1000],
+        ["openLongThreshold", .55],
+        ["closeLongThreshold", .50],
+        ["openShortThreshold", .45],
+        ["closeShortThreshold", .50],
+    ]));
 
     ns.ui.openTail();
 
@@ -68,7 +75,7 @@ export async function main(ns) {
             const maxShares = ns.stock.getMaxShares(symbol);
 
             // Woohoo, forecast says buy the symbol/stock.
-            if (forecast > openLongThreshold) {
+            if (forecast > flags.openLongThreshold) {
                 const shares = maxShares - longShares;
 
                 if (shares > 0) {
@@ -91,7 +98,7 @@ export async function main(ns) {
             } 
             
             // Shit, the forecast tells us we should close our longs.
-            if (forecast < closeLongThreshold && longShares > 0) {
+            if (forecast < flags.closeLongThreshold && longShares > 0) {
                 ns.stock.sellStock(symbol, longShares);
                 const profit = (price - longAveragePrice) * longShares;
                 let text = "profit";
@@ -105,7 +112,7 @@ export async function main(ns) {
             }
 
             // Woohoo, forecast says short the symbol/stock.
-            if (shortingEnabled && forecast < openShortThreshold) {
+            if (flags.shortingEnabled && forecast < flags.openShortThreshold) {
                 const shares = maxShares - shortShares;
 
                 if (shares > 0) {
@@ -133,7 +140,7 @@ export async function main(ns) {
             }
 
             // Shit, the forecast tells us we should close/cover our shorted symbols/stocks.
-            if (shortingEnabled && forecast > closeShortThreshold && shortShares > 0) {
+            if (flags.shortingEnabled && forecast > flags.closeShortThreshold && shortShares > 0) {
                 // Shorting broke my head for a while. When shorting,
                 // you borrow shares, sell them immediately, hope the
                 // price goes down, buy them back later and return the
@@ -151,6 +158,6 @@ export async function main(ns) {
                 );
             }
         }
-        await ns.sleep(sleepTime);
+        await ns.sleep(flags.sleepTime);
     }
 }

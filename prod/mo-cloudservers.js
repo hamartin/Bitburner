@@ -1,3 +1,7 @@
+/**
+ * @typedef {{ serverNamePrefix: String, sleepTime: Number }} MyFlags
+ */
+
 //
 // Global constants
 //
@@ -25,8 +29,11 @@ const ramTiers = [
  * @param {NS} ns 
  */
 export async function main(ns) {
-    const serverNamePrefix = ns.args[0] ? String(ns.args[0]) : "Vogon-";
-    const sleepTime = ns.args[1] ? Number(ns.args[1]) : 10000;
+    /** @type {MyFlags} */
+    const flags = /** @type {MyFlags} */ (ns.flags([
+        ["serverNamePrefix", "Vogon-"],
+        ["sleepTime", 10000],
+    ]));
 
     ns.ui.openTail();
 
@@ -47,7 +54,8 @@ export async function main(ns) {
             for (const ramTier of ramTiers) {
                 const cost = ns.cloud.getServerCost(ramTier);
                 if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
-                    const hostName = serverNamePrefix + boughtServers.length;
+                    const hostName = flags.serverNamePrefix + boughtServers.length;
+                    //const hostName = serverNamePrefix + boughtServers.length;
                     ns.cloud.purchaseServer(hostName, ramTier);
                     ns.print(
                         LOG_LEVEL.SUCCESS +
@@ -86,7 +94,7 @@ export async function main(ns) {
                 );
             }
         }
-        await ns.sleep(sleepTime);
+        await ns.sleep(flags.sleepTime);
     }
     ns.tprint(LOG_LEVEL.INFO + "All purchased servers are maxed out. Exiting script.");
 }

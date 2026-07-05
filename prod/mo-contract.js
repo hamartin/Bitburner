@@ -15,22 +15,30 @@
  */ 
 
 /**
+ * @typedef {{ fileName: String, hostName: String, contractType: String }} MyFlags
+ */
+
+/**
  * @param {NS} ns
  * @returns
  */
 export async function main(ns) {
-  const fileName = ns.args[0] ? String(ns.args[0]) : "";
-  const hostName = ns.args[1] ? String(ns.args[1]) : "";
-  const contractType = ns.args[2] ? String(ns.args[2]) : "";
+  /** @type {MyFlags} */
+  const flags = /** @type {MyFlags} */ (ns.flags([
+    ["fileName", ""],
+    ["hostName", ""],
+    ["contractType", ""],
+  ]));
+
   /** @type {String[]} */
   const contractTypes = ns.codingcontract.getContractTypes();
-  if (!fileName || !hostName || !contractType) {
+  if (!flags.fileName || !flags.hostName || !flags.contractType) {
     ns.tprint("Usage: run mo-contract.js <FILENAME> <HOSTNAME> <CONTRACT TYPE>");
     return
   } 
 
-  if (!contractTypes.includes(contractType)) {
-    ns.tprint(`Contract type ${contractType} does not exist.`);
+  if (!contractTypes.includes(flags.contractType)) {
+    ns.tprint(`Contract type ${flags.contractType} does not exist.`);
     ns.tprint("You can choose between the following contract types:");
     for (const ctype of contractTypes) {
         ns.tprint(`\t${ctype}`);
@@ -38,17 +46,17 @@ export async function main(ns) {
   }
 
   // Get the contract data and description. Print the description.
-  const data = ns.codingcontract.getData(fileName, hostName);
-  const description = ns.codingcontract.getDescription(fileName, hostName);
+  const data = ns.codingcontract.getData(flags.fileName, flags.hostName);
+  const description = ns.codingcontract.getDescription(flags.fileName, flags.hostName);
   ns.tprint(description);
 
   let reward = undefined;
-  if (contractType == "Total Ways to Sum") {
+  if (flags.contractType == "Total Ways to Sum") {
     const solution = solveTotalWaysToSum(ns, data);
-    reward = ns.codingcontract.attempt(solution, fileName, hostName);
+    reward = ns.codingcontract.attempt(solution, flags.fileName, flags.hostName);
     ns.tprint(`Total Ways to Sum: ${solution}`);
   } else {
-    ns.tprint(`The script does not support the coding contract ${contractType} yet.`);
+    ns.tprint(`The script does not support the coding contract ${flags.contractType} yet.`);
     return;
   }
 

@@ -1,3 +1,7 @@
+/**
+ * @typedef {{ targetHost: String, maxMoneyMultiplier: Number, securityThresholdAdd: Number }} MyFlags
+ */
+
 //
 // Global constants
 //
@@ -18,14 +22,18 @@ const LOG_LEVEL = Object.freeze({
  * @returns 
  */
 export async function main(ns) {
-    const targetHost = ns.args[0] ? String(ns.args[0]) : "";
-    const maxMoneyMultiplier = ns.args[1] ? Number(ns.args[1]) : .75;
-    const securityThresholdAdd = ns.args[2] ? Number(ns.args[2]) : 5;
-    const moneyThresh = ns.getServerMaxMoney(targetHost) * maxMoneyMultiplier;
-    const securityThresh = ns.getServerMinSecurityLevel(targetHost) + securityThresholdAdd;
+    /** @type {MyFlags} */
+    const flags = /** @type {MyFlags} */ (ns.flags([
+        ["targetHost", ""],
+        ["maxMoneyMultiplier", .75],
+        ["securityThresholdAdd", 5],
+    ]));
+
+    const moneyThresh = ns.getServerMaxMoney(flags.targetHost) * flags.maxMoneyMultiplier;
+    const securityThresh = ns.getServerMinSecurityLevel(flags.targetHost) + flags.securityThresholdAdd;
 
     // Target host is a requirement. We simply exit with a usage message if one is not given.
-    if (!targetHost) {
+    if (!flags.targetHost) {
         ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST NAME> <MAX MONEY MULTIPLIER> <SECURITY THRESHOLD ADD>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t<MAX MONEY MULTIPLIER>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Optional and defaults to 0.75");
@@ -35,12 +43,12 @@ export async function main(ns) {
     }
 
     while (true) {
-        if (ns.getServerSecurityLevel(targetHost) > securityThresh) {
-            await ns.weaken(targetHost);
-        } else if (ns.getServerMoneyAvailable(targetHost) < moneyThresh) {
-            await ns.grow(targetHost);
+        if (ns.getServerSecurityLevel(flags.targetHost) > securityThresh) {
+            await ns.weaken(flags.targetHost);
+        } else if (ns.getServerMoneyAvailable(flags.targetHost) < moneyThresh) {
+            await ns.grow(flags.targetHost);
         } else {
-            await ns.hack(targetHost);
+            await ns.hack(flags.targetHost);
         }
     }
 }
