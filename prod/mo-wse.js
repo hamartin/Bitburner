@@ -80,7 +80,12 @@ export async function main(ns) {
                             ns.stock.buyShort(symbol, shortShares);
                         }
                         ns.stock.buyStock(symbol, shares);
-                        ns.tprint(LOG_LEVEL.SUCCESS + `Bought (LONG) ${shares} ${symbol} @ ${price}`);
+                        ns.tprint(
+                            LOG_LEVEL.SUCCESS +
+                            `Bought (LONG) ${shares} ${symbol} @ ${
+                                ns.format.number(price)
+                            }`
+                        );
                     }
                 }
             } 
@@ -91,7 +96,12 @@ export async function main(ns) {
                 const profit = (price - longAveragePrice) * longShares;
                 let text = "profit";
                 if (profit < 0) text = "loss";
-                ns.tprint(LOG_LEVEL.SUCCESS + `Sold (LONG) ${longShares} ${symbol} for a ${text} of ${ns.format.number(profit)}`);
+                ns.tprint(
+                    LOG_LEVEL.SUCCESS +
+                    `Sold (LONG) ${longShares} ${symbol} for a ${text} of ${
+                        ns.format.number(profit)
+                    }`
+                );
             }
 
             // Woohoo, forecast says short the symbol/stock.
@@ -112,7 +122,12 @@ export async function main(ns) {
                             ns.stock.sellStock(symbol, longShares);
                         }
                         ns.stock.sellShort(symbol, shares);
-                        ns.tprint(LOG_LEVEL.SUCCESS + `Bought (SHORTED) ${shares} ${symbol} @ ${price}`);
+                        ns.tprint(
+                            LOG_LEVEL.SUCCESS +
+                            `Bought (SHORTED) ${shares} ${symbol} @ ${
+                                ns.format.number(price)
+                            }`
+                        );
                     }
                 }
             }
@@ -128,7 +143,12 @@ export async function main(ns) {
                 const profit = (shortAveragePrice - price) * shortShares;
                 let text = "profit";
                 if (profit < 0) text = "loss";
-                ns.tprint(LOG_LEVEL.SUCCESS + `Sold (SHORTED)  ${shortShares} ${symbol} for a ${text} of ${ns.format.number(profit)}`);
+                ns.tprint(
+                    LOG_LEVEL.SUCCESS +
+                    `Sold (SHORTED)  ${shortShares} ${symbol} for a ${text} of ${
+                        ns.format.number(profit)
+                    }`
+                );
             }
         }
         await ns.sleep(sleepTime);
