@@ -83,6 +83,10 @@ around the game.
   longs/shorts  which is just sitting there without supervision. This script
   will simply close every long/short, not caring if you make money or loose
   money.
+- mo-read-literature.js
+  On the different servers, you might find a `.lit` file. It contains
+  information/storyline/hints maybe to the game. You can read the content using
+  this script.
 
 
 ## Credits
