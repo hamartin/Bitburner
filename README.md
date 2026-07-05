@@ -13,7 +13,10 @@ actually knows how to code.
 
 
 ## Scripts
-Currently there are 2 main scripts. The `mo-controller.js` and `mo-cloudservers.js`.
+Currently there are 4 main scripts. The `mo-controller.js`,
+`mo-cloudservers.js`, `mo-wse.js` and `mo-wse-stock-cleanup.js`.
+
+The rest of the files are payloads to be uploaded to servers at need.
 
 
 ### Controller
@@ -37,6 +40,17 @@ until it has maxed out the number of cloud servers one can own. When the number
 of servers are maxed out, it starts upgrading each server until it no longer can
 upgrade a server because there are no more upgrade options. At this time, the
 script will exit with a message.
+
+
+### World Stock Exchange
+The file `mo-wse.js` will run forever, buying longs and shorts when the
+forecast show signs that we can earn money on it. It also closes the position
+when there are signs that it will not be profitable any more.
+
+At some point, you might want to kill the script which will leave you with a set
+of positions not being closed. The script `mo-wse-stock-cleanup.js` simply
+iterates over all symbols, checks if you have a position on that symbol and
+closes it, with no regards to if it is proffitables or not.
 
 
 ### Payload scripts
