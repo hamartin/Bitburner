@@ -21,6 +21,8 @@ const ramTiers = [
 ];
 
 export async function main(ns) {
+    ns.ui.openTail();
+
     ns.tprint(LOG_LEVEL.INFO + "Note that you can override default settings.");
     ns.tprint(LOG_LEVEL.INFO + "Usage: run mo-cloudservers.js <SERVER NAME PREFIX> <SLEEP TIME>");
     ns.tprint(LOG_LEVEL.INFO + "\t<SERVER NAME PREFIX:");
@@ -45,7 +47,10 @@ export async function main(ns) {
                 if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
                     const hostName = serverNamePrefix + boughtServers.length;
                     ns.cloud.purchaseServer(hostName, ramTier);
-                    ns.tprint(LOG_LEVEL.INFO + `Bought new server ${hostName} with ${ramTier}GB`);
+                    ns.print(
+                        LOG_LEVEL.SUCCESS +
+                        `Bought new server ${hostName} with ${ramTier}GB`
+                    );
                 }
                 break;
             } 
@@ -71,7 +76,13 @@ export async function main(ns) {
 
             // We check the cost of the next tier, and if we can afford it, we upgrade the server.
             const cost = ns.cloud.getServerUpgradeCost(smallest, nextRamTier);
-            if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) ns.cloud.upgradeServer(smallest, nextRamTier);
+            if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
+                ns.cloud.upgradeServer(smallest, nextRamTier);
+                ns.print(
+                    LOG_LEVEL.SUCCESS +
+                    `Upgraded RAM on ${smallest} from ${ramTier}GB to ${nextRamTier}GB`
+                );
+            }
         }
         await ns.sleep(sleepTime);
     }

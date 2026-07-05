@@ -121,11 +121,11 @@ export function hackHosts(ns, hosts, crackingPrograms) {
         for (const [program, func] of crackingPrograms) {
             if (ns.fileExists(program, "home")) {
                 func(host);
-                ns.tprint(LOG_LEVEL.SUCCESS + `Executed ${program} on ${host}`);
+                ns.print(LOG_LEVEL.SUCCESS + `Executed ${program} on ${host}`);
             }
         }
         ns.nuke(host);
-        ns.tprint(LOG_LEVEL.SUCCESS + `Nuked ${host}`);
+        ns.print(LOG_LEVEL.SUCCESS + `Nuked ${host}`);
     }
 }
 
@@ -134,6 +134,8 @@ export function hackHosts(ns, hosts, crackingPrograms) {
 //
 
 export async function main(ns) {
+    ns.ui.openTail();
+
     //
     // Constants which are used in different places.
     //

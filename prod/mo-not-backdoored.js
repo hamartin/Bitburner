@@ -9,18 +9,10 @@
 //
 
 export async function main(ns) {
-    ns.ui.openTail(); // open tail window
+    ns.ui.openTail();
 
     const hackingLevel = ns.getHackingLevel();
-
-    // Build full network tree
     const tree = await buildTree(ns, "home");
-
-    // Collect servers that:
-    // - are NOT purchased
-    // - are rooted
-    // - do NOT have a backdoor
-    // - CAN be backdoored (hacking level high enough)
     const pending = [];
     collectPending(tree, ns, hackingLevel, pending);
 

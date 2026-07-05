@@ -25,19 +25,21 @@ const LOG_LEVEL = Object.freeze({
 });
 
 export async function main(ns) {
-    ns.tprint(LOG_LEVEL.INFO + "Usage: run mo-wse.js <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>");
-    ns.tprint(LOG_LEVEL.INFO + "\t<SHORTING ENABLED>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to false.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to 1000 which is a second.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<OPEN LONG THRESHOLD>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .55 which is a strong buying forecast.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<CLOSE LONG THRESHOLD>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<OPEN SHORT THRESHOLD>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .45 which is a strong shorting forecast.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<CLOSE SHORT THRESHOLD>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
+    ns.ui.openTail();
+
+    ns.print(LOG_LEVEL.INFO + "Usage: run mo-wse.js <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>");
+    ns.print(LOG_LEVEL.INFO + "\t<SHORTING ENABLED>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to false.");
+    ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to 1000 which is a second.");
+    ns.print(LOG_LEVEL.INFO + "\t<OPEN LONG THRESHOLD>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .55 which is a strong buying forecast.");
+    ns.print(LOG_LEVEL.INFO + "\t<CLOSE LONG THRESHOLD>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
+    ns.print(LOG_LEVEL.INFO + "\t<OPEN SHORT THRESHOLD>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .45 which is a strong shorting forecast.");
+    ns.print(LOG_LEVEL.INFO + "\t<CLOSE SHORT THRESHOLD>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
 
     const shortingEnabled = ns.args[0] === "true";
     let sleepTime = ns.args[1];
@@ -80,7 +82,7 @@ export async function main(ns) {
                             ns.stock.buyShort(symbol, shortShares);
                         }
                         ns.stock.buyStock(symbol, shares);
-                        ns.tprint(
+                        ns.print(
                             LOG_LEVEL.SUCCESS +
                             `Bought (LONG) ${shares} ${symbol} @ ${
                                 ns.format.number(price)
@@ -96,7 +98,7 @@ export async function main(ns) {
                 const profit = (price - longAveragePrice) * longShares;
                 let text = "profit";
                 if (profit < 0) text = "loss";
-                ns.tprint(
+                ns.print(
                     LOG_LEVEL.SUCCESS +
                     `Sold (LONG) ${longShares} ${symbol} for a ${text} of ${
                         ns.format.number(profit)
@@ -122,7 +124,7 @@ export async function main(ns) {
                             ns.stock.sellStock(symbol, longShares);
                         }
                         ns.stock.sellShort(symbol, shares);
-                        ns.tprint(
+                        ns.print(
                             LOG_LEVEL.SUCCESS +
                             `Bought (SHORTED) ${shares} ${symbol} @ ${
                                 ns.format.number(price)
@@ -143,7 +145,7 @@ export async function main(ns) {
                 const profit = (shortAveragePrice - price) * shortShares;
                 let text = "profit";
                 if (profit < 0) text = "loss";
-                ns.tprint(
+                ns.print(
                     LOG_LEVEL.SUCCESS +
                     `Sold (SHORTED)  ${shortShares} ${symbol} for a ${text} of ${
                         ns.format.number(profit)
