@@ -1,3 +1,7 @@
+/**
+ * @typedef {{ host: String, parent: TreeNode | null, children: TreeNode[] }} TreeNode
+ */
+
 //
 // This whole file is created by Copilot in pure vibecoding. I originally had a
 // script which just printed the path to all hosts where a backdoor was not
@@ -8,6 +12,11 @@
 // tail window open while you move around doing the work you need to do.
 //
 
+/**
+ * 
+ * @param {NS} ns 
+ * @returns 
+ */
 export async function main(ns) {
     ns.ui.openTail();
 
@@ -29,17 +38,13 @@ export async function main(ns) {
 }
 
 /**
- * @typedef {{ host: string, parent: TreeNode | null, children: TreeNode[] }} TreeNode
- */
-
-/**
  * @param {NS} ns
- * @param {string} host
+ * @param {String} host
  * @param {TreeNode | null} parent
- * @param {Set<string>} visited
- * @returns {Promise<TreeNode>}
+ * @param {Set<String>} visited
+ * @returns {TreeNode}
  */
-async function buildTree(ns, host, parent = null, visited = new Set()) {
+function buildTree(ns, host, parent = null, visited = new Set()) {
     /** Build tree structure, storing real parent nodes */
     visited.add(host);
 
@@ -50,22 +55,29 @@ async function buildTree(ns, host, parent = null, visited = new Set()) {
         if (visited.has(neighbor)) continue;
 
         const details = ns.getServer(neighbor);
-        if (details.purchasedByPlayer) continue; // exclude purchased servers
+        if (details.purchasedByPlayer) continue;
 
-        const child = await buildTree(ns, neighbor, node, visited);
+        const child = buildTree(ns, neighbor, node, visited);
         node.children.push(child);
     }
 
     return node;
 }
 
+/**
+ * 
+ * @param {TreeNode} node 
+ * @param {NS} ns 
+ * @param {Number} hackingLevel 
+ * @param {TreeNode[]} list 
+ */
 function collectPending(node, ns, hackingLevel, list) {
     /** Collect nodes that are rooted, backdoor‑eligible, and not yet backdoored */
     const details = ns.getServer(node.host);
 
     const rooted = details.hasAdminRights;
     const needsBackdoor = !details.backdoorInstalled;
-    const canBackdoor = hackingLevel >= details.requiredHackingSkill;
+    const canBackdoor = hackingLevel >= (details.requiredHackingSkill ?? Infinity);
 
     if (rooted && needsBackdoor && canBackdoor && node.host !== "home") {
         list.push(node);
@@ -76,15 +88,20 @@ function collectPending(node, ns, hackingLevel, list) {
     }
 }
 
+/**
+ * 
+ * @param {TreeNode} node 
+ * @returns {String[]}
+ */
 function buildFullPath(node) {
     /** Build full path from home to this node */
     const path = [];
+    /** @type {TreeNode | null} */
     let current = node;
 
     while (current) {
         path.unshift(current.host);
         current = current.parent;
     }
-
     return path;
 }

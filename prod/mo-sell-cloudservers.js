@@ -1,4 +1,7 @@
-/** @param {NS} ns **/
+/**
+ * @param {NS} ns
+ * @returns
+ */
 export async function main(ns) {
     ns.ui.openTail();
 

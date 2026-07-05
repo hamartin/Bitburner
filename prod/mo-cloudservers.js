@@ -21,7 +21,13 @@ const ramTiers = [
     524288, 1048576,
 ];
 
+/**
+ * @param {NS} ns 
+ */
 export async function main(ns) {
+    const serverNamePrefix = ns.args[0] ? String(ns.args[0]) : "Vogon-";
+    const sleepTime = ns.args[1] ? Number(ns.args[1]) : 10000;
+
     ns.ui.openTail();
 
     ns.print(LOG_LEVEL.INFO + "Note that you can override default settings.");
@@ -31,11 +37,6 @@ export async function main(ns) {
     ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
     ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to 10000 equalling 10 seconds.");
     ns.print(LOG_LEVEL.INFO + "");
-
-    let serverNamePrefix = ns.args[0];
-    let sleepTime = ns.args[1];
-    if (serverNamePrefix === undefined) serverNamePrefix = "Vogon-";
-    if (sleepTime === undefined) sleepTime = 10000;
 
     const maxServers = ns.cloud.getServerLimit();
     while (true) {

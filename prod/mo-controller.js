@@ -1,3 +1,7 @@
+/**
+ * @typedef {(host: string) => void} CrackFunction
+ */
+
 //
 // Global constants
 //
@@ -24,25 +28,29 @@ const PAYLOADS = Object.freeze({
 // Functions
 //
 
-// Copies the virtus and kills any running scripts of the same kind if
-// allready running on the target host.
-async function copyVirusToHackingServer(ns, hostName, virusFileName) {
-    await ns.scp(virusFileName, hostName);
-}
-
-// Executes a script on a server, maxing out the number of threads.
-function executeScriptOnRemoteHost(ns, hostName, targetHost, pid, virusFileName) {
+/**
+ * @param {NS} ns 
+ * @param {string} hostName 
+ * @param {string} targetHost 
+ * @param {string} virusFileName 
+ */
+function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileName) {
+    // Executes a script on a server, maxing out the number of threads.
     const virusRamUsage = ns.getScriptRam(virusFileName);
     const maxRam = ns.getServerMaxRam(hostName);
     const threads = Math.floor(maxRam / virusRamUsage);
-
-    if (pid !== undefined && ns.isRunning(pid, hostName)) ns.kill(pid, hostName);
-    return ns.exec(virusFileName, hostName, threads, targetHost);
+    ns.exec(virusFileName, hostName, threads, targetHost);
 }
 
-// Function returns a list of host names for hacking servers we have
-// allready bought.
+/**
+ * @param {NS} ns 
+ * @param {string[]} hosts 
+ * @param {string} namePrefix 
+ * @returns {string[]}
+ */
 function getHackingServerHostNames(ns, hosts, namePrefix) {
+    // Function returns a list of host names for hacking servers we have
+    // allready bought.
     const hackingServers = hosts.filter(host => ns.hasRootAccess(host) && ns.getServerMaxRam(host) > 0);
 
     // This bit of the code handles getting all the bought servers
@@ -55,11 +63,17 @@ function getHackingServerHostNames(ns, hosts, namePrefix) {
     return hackingServers;
 }
 
-// Gets a list of hosts wee can see on the network and compares the
-// hosts required hacking level to the players current hacking level.
-// If the player has a high enough hacking level to hack the host, the
-// host is added to a list and returned at the end of the execution.
+/**
+ * @param {NS} ns 
+ * @param {Map<string, Object>} hosts 
+ * @param {Map<string, CrackFunction>} crackingPrograms
+ * @returns {string[]}
+ */
 function getHostsThatCanBeHacked(ns, hosts, crackingPrograms) {
+    // Gets a list of hosts wee can see on the network and compares the
+    // hosts required hacking level to the players current hacking level.
+    //If the player has a high enough hacking level to hack the host, the
+    // host is added to a list and returned at the end of the execution.
     const playerHackingLevel = ns.getHackingLevel();
     const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns, crackingPrograms);
 
@@ -75,10 +89,14 @@ function getHostsThatCanBeHacked(ns, hosts, crackingPrograms) {
     return hostsThatCanBeHacked;
 }
 
-// The function will start initially at the host which the script is
-// run on and scan all servers in the network, returning a list of all
-// servers found.
+/**
+ * @param {NS} ns 
+ * @returns {string[]}
+ */
 function getNetworkHostNames(ns) {
+    // The function will start initially at the host which the script is
+    // run on and scan all servers in the network, returning a list of
+    // all servers found.
     const visited = new Set([ns.getHostname(), ]);
     const stack = [ns.getHostname(), ];
 
@@ -95,9 +113,14 @@ function getNetworkHostNames(ns) {
     return [...visited];
 }
 
-// The function will return a map of all servers in the network, with
-// the server name as the key and the server details as the value.
+/**
+ * @param {NS} ns 
+ * @param {string[]} hostNames 
+ * @returns {Map<string, Object>}
+ */
 function getNetworkHostsDetails(ns, hostNames) {
+    // The function will return a map of all servers in the network, with
+    // the server name as the key and the server details as the value.
     const hosts = new Map();
     for (const host of hostNames) {
         const details = ns.getServer(host);
@@ -106,9 +129,14 @@ function getNetworkHostsDetails(ns, hostNames) {
     return hosts;
 }
 
-// Simple returns the number of cracking programs the player has on
-// their home server.
+/**
+ * @param {NS} ns
+ * @param {Map<string, CrackFunction>} crackingPrograms
+ * @returns {number}
+ */
 function getNumberOfCrackingPrograms(ns, crackingPrograms) {
+    // Simple returns the number of cracking programs the player has on
+    // their home server.
     let numberOfCrackingPrograms = 0;
     for (const [program, func] of crackingPrograms) {
         if (ns.fileExists(program, "home")) numberOfCrackingPrograms++;
@@ -116,6 +144,11 @@ function getNumberOfCrackingPrograms(ns, crackingPrograms) {
     return numberOfCrackingPrograms;
 }
 
+/**
+ * @param {NS} ns
+ * @param {string[]} hosts
+ * @param {Map<string, CrackFunction>} crackingPrograms
+ */
 export function hackHosts(ns, hosts, crackingPrograms) {
     for (const host of hosts) {
         for (const [program, func] of crackingPrograms) {
@@ -133,6 +166,9 @@ export function hackHosts(ns, hosts, crackingPrograms) {
 // Main program
 //
 
+/**
+ * @param {NS} ns
+ */
 export async function main(ns) {
     ns.ui.openTail();
 
@@ -147,13 +183,15 @@ export async function main(ns) {
         ["relaySMTP.exe", ns.relaysmtp],
         ["HTTPWorm.exe", ns.httpworm],
         ["SQLInject.exe", ns.sqlinject],
-    ])
+    ]);
 
     // Script arguments which is used throughout the script.
-    const targetHost = ns.args[0];
-    let serverNamePrefix = ns.args[1];
-    let sleepTime = ns.args[2];
-    if (targetHost === undefined) {
+    const targetHost = ns.args[0] ? String(ns.args[0]) : "";
+    const serverNamePrefix = ns.args[1] ? String(ns.args[1]) : "Vogon-";
+    const sleepTime = ns.args[2] ? Number(ns.args[2]) : 10000;
+
+    // Target host is a requirement. If one is not given, we print a usage message and quit.
+    if (!targetHost) {
         ns.tprint(LOG_LEVEL.ERROR + "Usage: run mo-controller.js <TARGET HOST> <CLOUD SERVER NAME PREFIX> <SLEEP TIME>");
         ns.tprint(LOG_LEVEL.ERROR + "\t<CLOUD SERVER NAME PREFIX>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to Vogon-");
@@ -163,19 +201,14 @@ export async function main(ns) {
         ns.tprint(LOG_LEVEL.ERROR + "Note that if you specify sleep time on the command line, you have to specify server name prefix as well.");
         return;
     }
+
+    // All the payloads are a requirement. If one or more don't exist, print a message and quit.
     for (const script of Object.values(PAYLOADS)) {
         if (!ns.fileExists(script, ns.getHostname())) {
             ns.tprint(LOG_LEVEL.ERROR + `No file found with the name ${script}.`);
             return;
         }
     }
-    if (serverNamePrefix === undefined) serverNamePrefix = "Vogon-";
-    if (sleepTime === undefined) sleepTime = 10000;
-
-    // This map is used to keep a list of processes running on the
-    // different hosts. The key is the host name and the value is a list
-    // of PIDs.
-    const pid_list = new Map();
 
     let numberOfHackingServers = 0;
     while (true) {
@@ -204,17 +237,12 @@ export async function main(ns) {
             for (const host of hackingServers) {
                 // We don't want to overwrite the source file.
                 if (host != ns.getHostname()) {
-                    copyVirusToHackingServer(ns, host, PAYLOADS.ALLINONEGO);
-                    copyVirusToHackingServer(ns, host, PAYLOADS.GROW);
-                    copyVirusToHackingServer(ns, host, PAYLOADS.HACK);
-                    copyVirusToHackingServer(ns, host, PAYLOADS.WEAKEN);
-                    ns.killall(host);
+                    await ns.scp(PAYLOADS.ALLINONEGO, host);
+                    await ns.scp(PAYLOADS.HACK, host);
+                    await ns.scp(PAYLOADS.GROW, host);
+                    await ns.scp(PAYLOADS.WEAKEN, host);
+                    killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
                 }
-                // Start the script we just copied.
-                let pid = undefined;
-                if (pid_list.has(host)) pid = pid_list.get(host);
-                const newPid = await executeScriptOnRemoteHost(ns, host, targetHost, pid, PAYLOADS.ALLINONEGO);
-                pid_list.set(host, newPid);
             }
         }
 
@@ -223,4 +251,15 @@ export async function main(ns) {
         // how often the script evaulates the current state.
         await ns.sleep(sleepTime);
     }
+}
+
+/**
+ * @param {NS} ns
+ * @param {string} host
+ * @param {string} targetHost
+ * @param {string} fileName
+ */
+function killAllProcessesAndRunScript(ns, host, targetHost, fileName) {
+    ns.killall(host);
+    executeScriptOnRemoteHost(ns, host, targetHost, fileName);
 }

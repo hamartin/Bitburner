@@ -24,7 +24,17 @@ const LOG_LEVEL = Object.freeze({
     "DEBUG": "DEBUG: ",
 });
 
+/**
+ * @param {NS} ns 
+ */
 export async function main(ns) {
+    const shortingEnabled = ns.args[0] ? true : false;
+    const sleepTime = ns.args[1] ? Number(ns.args[1]) : 1000;
+    const openLongThreshold = ns.args[2] ? Number(ns.args[2]) : .55;
+    const closeLongThreshold = ns.args[3] ? Number(ns.args[3]) : .50;
+    const openShortThreshold = ns.args[4] ? Number(ns.args[4]) : .45;
+    const closeShortThreshold = ns.args[5] ? Number(ns.args[5]) : .50;
+
     ns.ui.openTail();
 
     ns.print(LOG_LEVEL.INFO + "Usage: run mo-wse.js <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>");
@@ -40,18 +50,6 @@ export async function main(ns) {
     ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .45 which is a strong shorting forecast.");
     ns.print(LOG_LEVEL.INFO + "\t<CLOSE SHORT THRESHOLD>:");
     ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
-
-    const shortingEnabled = ns.args[0] === "true";
-    let sleepTime = ns.args[1];
-    let openLongThreshold = ns.args[2];
-    let closeLongThreshold = ns.args[3];
-    let openShortThreshold = ns.args[4];
-    let closeShortThreshold = ns.args[5];
-    if (sleepTime === undefined) sleepTime = 1000;
-    if (openLongThreshold === undefined) openLongThreshold = .55;
-    if (closeLongThreshold === undefined) closeLongThreshold = .50;
-    if (openShortThreshold === undefined) openShortThreshold = .45;
-    if (closeShortThreshold === undefined) closeShortThreshold = .50;
 
     const symbols = ns.stock.getSymbols();
     while (true) {

@@ -12,9 +12,20 @@ const LOG_LEVEL = Object.freeze({
     "DEBUG": "DEBUG: ",
 });
 
+/**
+ * 
+ * @param {NS} ns 
+ * @returns 
+ */
 export async function main(ns) {
-    const targetHost = ns.args[0];
-    if (targetHost === undefined) {
+    const targetHost = ns.args[0] ? String(ns.args[0]) : "";
+    const maxMoneyMultiplier = ns.args[1] ? Number(ns.args[1]) : .75;
+    const securityThresholdAdd = ns.args[2] ? Number(ns.args[2]) : 5;
+    const moneyThresh = ns.getServerMaxMoney(targetHost) * maxMoneyMultiplier;
+    const securityThresh = ns.getServerMinSecurityLevel(targetHost) + securityThresholdAdd;
+
+    // Target host is a requirement. We simply exit with a usage message if one is not given.
+    if (!targetHost) {
         ns.tprint(LOG_LEVEL.ERROR + "Usage: run mo-payload.js <TARGET HOST NAME> <MAX MONEY MULTIPLIER> <SECURITY THRESHOLD ADD>");
         ns.tprint(LOG_LEVEL.ERROR + "\t<MAX MONEY MULTIPLIER>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Optional and defaults to 0.75");
@@ -22,12 +33,6 @@ export async function main(ns) {
         ns.tprint(LOG_LEVEL.ERROR + "\t  Optional and defaults to 5");
         return;
     }
-    let maxMoneyMultiplier = ns.args[1];
-    if (maxMoneyMultiplier === undefined) maxMoneyMultiplier = 0.75;
-    let securityThresholdAdd = ns.args[2];
-    if (securityThresholdAdd === undefined) securityThresholdAdd = 5;
-    const moneyThresh = ns.getServerMaxMoney(targetHost) * maxMoneyMultiplier;
-    const securityThresh = ns.getServerMinSecurityLevel(targetHost) + securityThresholdAdd;
 
     while (true) {
         if (ns.getServerSecurityLevel(targetHost) > securityThresh) {
