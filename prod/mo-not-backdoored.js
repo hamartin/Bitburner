@@ -9,52 +9,74 @@
 //
 
 export async function main(ns) {
-    ns.ui.openTail(); // Open tail window for clean output
+    ns.ui.openTail(); // open tail window
 
     const hackingLevel = ns.getHackingLevel();
+
+    // Build full network tree
     const tree = await buildTree(ns, "home");
 
-    // Collect all nodes that still need backdoors
+    // Collect servers that:
+    // - are NOT purchased
+    // - are rooted
+    // - do NOT have a backdoor
+    // - CAN be backdoored (hacking level high enough)
     const pending = [];
     collectPending(tree, ns, hackingLevel, pending);
 
     if (pending.length === 0) {
-        ns.print("✔ All hosts have a backdoor installed.");
+        ns.print("✔ All eligible hosts have a backdoor installed.");
         return;
     }
 
+    // Sort alphabetically by path and print.
+    const lines = pending.map(node => buildFullPath(node).join(" → "));
+    lines.sort();
     ns.print("⛔ Hosts that still need a backdoor:\n");
-    printPendingTree(ns, tree, hackingLevel);
+    for (const line of lines) ns.print(line);
 }
 
-/** Build tree structure, excluding purchased servers */
+/**
+ * @typedef {{ host: string, parent: TreeNode | null, children: TreeNode[] }} TreeNode
+ */
+
+/**
+ * @param {NS} ns
+ * @param {string} host
+ * @param {TreeNode | null} parent
+ * @param {Set<string>} visited
+ * @returns {Promise<TreeNode>}
+ */
 async function buildTree(ns, host, parent = null, visited = new Set()) {
+    /** Build tree structure, storing real parent nodes */
     visited.add(host);
 
-    const children = [];
+    /** @type {TreeNode} */
+    const node = { host, parent, children: [] };
+
     for (const neighbor of ns.scan(host)) {
         if (visited.has(neighbor)) continue;
 
         const details = ns.getServer(neighbor);
+        if (details.purchasedByPlayer) continue; // exclude purchased servers
 
-        // Skip purchased servers
-        if (details.purchasedByPlayer) continue;
-
-        children.push(await buildTree(ns, neighbor, host, visited));
+        const child = await buildTree(ns, neighbor, node, visited);
+        node.children.push(child);
     }
 
-    return { host, parent, children };
+    return node;
 }
 
-/** Collect nodes that still need backdoors */
 function collectPending(node, ns, hackingLevel, list) {
+    /** Collect nodes that are rooted, backdoor‑eligible, and not yet backdoored */
     const details = ns.getServer(node.host);
 
-    const reachable = hackingLevel >= details.requiredHackingSkill;
+    const rooted = details.hasAdminRights;
     const needsBackdoor = !details.backdoorInstalled;
+    const canBackdoor = hackingLevel >= details.requiredHackingSkill;
 
-    if (reachable && needsBackdoor && node.host !== "home") {
-        list.push(node.host);
+    if (rooted && needsBackdoor && canBackdoor && node.host !== "home") {
+        list.push(node);
     }
 
     for (const child of node.children) {
@@ -62,41 +84,15 @@ function collectPending(node, ns, hackingLevel, list) {
     }
 }
 
-/** Print only nodes that still need backdoors, in tree form */
-function printPendingTree(ns, node, hackingLevel, prefix = "", isLast = true) {
-    const details = ns.getServer(node.host);
-
-    const reachable = hackingLevel >= details.requiredHackingSkill;
-    const needsBackdoor = !details.backdoorInstalled;
-
-    // Only show nodes that need backdoors (except home)
-    const showNode = reachable && needsBackdoor && node.host !== "home";
-
-    const connector = prefix.length === 0
-        ? ""
-        : isLast ? "└─ " : "├─ ";
-
-    if (showNode) {
-        const path = buildPath(node);
-        ns.print(`${prefix}${connector}${node.host}`);
-        ns.print(`${prefix}   Path: ${path}`);
-    }
-
-    const newPrefix = prefix + (isLast ? "   " : "│  ");
-
-    for (let i = 0; i < node.children.length; i++) {
-        const child = node.children[i];
-        printPendingTree(ns, child, hackingLevel, newPrefix, i === node.children.length - 1);
-    }
-}
-
-/** Build path from home to this node */
-function buildPath(node) {
+function buildFullPath(node) {
+    /** Build full path from home to this node */
     const path = [];
     let current = node;
+
     while (current) {
         path.unshift(current.host);
-        current = current.parent ? { host: current.parent, parent: null } : null;
+        current = current.parent;
     }
-    return path.join(" → ");
+
+    return path;
 }
