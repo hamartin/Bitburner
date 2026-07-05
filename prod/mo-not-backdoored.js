@@ -31,7 +31,7 @@ export async function main(ns) {
     }
 
     // Sort alphabetically by path and print.
-    const lines = pending.map(node => buildFullPath(node).join(" → "));
+    const lines = pending.map(node => buildConnectCommand(buildFullPath(node)));
     lines.sort();
     ns.print("⛔ Hosts that still need a backdoor:\n");
     for (const line of lines) ns.print(line);
@@ -104,4 +104,19 @@ function buildFullPath(node) {
         current = current.parent;
     }
     return path;
+}
+
+/**
+ * Convert ["home","n00dles","foodnstuff"]
+ * into "home; connect n00dles; connect foodnstuff"
+ * @param {String[]} path
+ * @returns {String}
+ */
+function buildConnectCommand(path) {
+    const [first, ...rest] = path;
+    let cmd = first; // always "home"
+    for (const host of rest) {
+        cmd += `; connect ${host}`;
+    }
+    return cmd;
 }
