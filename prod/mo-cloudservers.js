@@ -24,18 +24,18 @@ const ramTiers = [
 export async function main(ns) {
     ns.ui.openTail();
 
-    ns.tprint(LOG_LEVEL.INFO + "Note that you can override default settings.");
-    ns.tprint(LOG_LEVEL.INFO + "Usage: run mo-cloudservers.js <SERVER NAME PREFIX> <SLEEP TIME>");
-    ns.tprint(LOG_LEVEL.INFO + "\t<SERVER NAME PREFIX:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Is optional and defaults to Vogon-");
-    ns.tprint(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
-    ns.tprint(LOG_LEVEL.INFO + "\t  Is optional and defaults to 1000 equalling 1 second.");
-    ns.tprint(LOG_LEVEL.INFO + "");
+    ns.print(LOG_LEVEL.INFO + "Note that you can override default settings.");
+    ns.print(LOG_LEVEL.INFO + "Usage: run mo-cloudservers.js <SERVER NAME PREFIX> <SLEEP TIME>");
+    ns.print(LOG_LEVEL.INFO + "\t<SERVER NAME PREFIX:");
+    ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to Vogon-");
+    ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
+    ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to 10000 equalling 10 seconds.");
+    ns.print(LOG_LEVEL.INFO + "");
 
     let serverNamePrefix = ns.args[0];
     let sleepTime = ns.args[1];
     if (serverNamePrefix === undefined) serverNamePrefix = "Vogon-";
-    if (sleepTime === undefined) sleepTime = 1000;
+    if (sleepTime === undefined) sleepTime = 10000;
 
     const maxServers = ns.cloud.getServerLimit();
     while (true) {

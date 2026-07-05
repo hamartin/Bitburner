@@ -158,7 +158,7 @@ export async function main(ns) {
         ns.tprint(LOG_LEVEL.ERROR + "\t<CLOUD SERVER NAME PREFIX>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to Vogon-");
         ns.tprint(LOG_LEVEL.ERROR + "\t<SLEEP TIME>:");
-        ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to 1000 equalling 1 second");
+        ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to 10000 equalling 10 seconds");
         ns.tprint(LOG_LEVEL.ERROR + "");
         ns.tprint(LOG_LEVEL.ERROR + "Note that if you specify sleep time on the command line, you have to specify server name prefix as well.");
         return;
@@ -170,7 +170,7 @@ export async function main(ns) {
         }
     }
     if (serverNamePrefix === undefined) serverNamePrefix = "Vogon-";
-    if (sleepTime === undefined) sleepTime = 1000;
+    if (sleepTime === undefined) sleepTime = 10000;
 
     // This map is used to keep a list of processes running on the
     // different hosts. The key is the host name and the value is a list
