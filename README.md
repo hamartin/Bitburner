@@ -87,6 +87,14 @@ around the game.
   On the different servers, you might find a `.lit` file. It contains
   information/storyline/hints maybe to the game. You can read the content using
   this script.
+- mo-find-contracts.js
+  Another utility scripts very similar to `mo-not-backdoored.js`. It goes
+  through every single server on the network and prints the full path and
+  filename to any contract on any host on the network.
+- mo-contract.js
+  I tried creating something that could solve a problem. I will keep on adding
+  them as I find the desire to solve more problems. These are the contacts you
+  find around on the different servers.
 
 
 ## Credits
