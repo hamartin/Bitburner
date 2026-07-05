@@ -67,6 +67,24 @@ which is code I am currently working on.
 So right now in this commit, only `mo-payload.js` is being used.
 
 
+### Utility scripts
+There is a set of utility scripts which I made to simplify things for my self
+when debugging or when I have to kill processes and there are stuff left behind
+around the game.
+
+- mo-not-backdoored.js
+  Prints the path to all servers you are able to backdoor on your current level
+  in a sorted manner.
+- mo-sell-cloudservers.js
+  Kills all processes running on all player bought cloud servers and then
+  deletes them.
+- mo-wse-stock-cleanup.js
+  If the `mo-wse.js` script dies or you kill it, there will be a set of
+  longs/shorts  which is just sitting there without supervision. This script
+  will simply close every long/short, not caring if you make money or loose
+  money.
+
+
 ## Credits
 Below you can find a list of urls and Youtubers and other sources which
 I have read and watched to get get ideas and understanding on how to
