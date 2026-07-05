@@ -45,22 +45,31 @@ function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileName) {
 /**
  * @param {NS} ns 
  * @param {string[]} hosts 
- * @param {string} namePrefix 
  * @returns {string[]}
  */
-function getHackingServerHostNames(ns, hosts, namePrefix) {
+function getHackingServerHostNames(ns, hosts) {
     // Function returns a list of host names for hacking servers we have
     // allready bought.
     const hackingServers = hosts.filter(host => ns.hasRootAccess(host) && ns.getServerMaxRam(host) > 0);
+    return hackingServers;
+}
 
+/**
+ * @param {NS} ns 
+ * @param {String} namePrefix 
+ * @returns {String[]}
+ */
+function getCloudServerHostNames(ns, namePrefix) {
     // This bit of the code handles getting all the bought servers
     // which does not show in the normal scans.
+    const hostNames = [];
+
     let i = 0;
     while (ns.serverExists(namePrefix + i)) {
-        hackingServers.push(namePrefix + i);
+        hostNames.push(namePrefix + i);
         i++;
     }
-    return hackingServers;
+    return hostNames;
 }
 
 /**
@@ -210,7 +219,12 @@ export async function main(ns) {
         }
     }
 
-    let numberOfHackingServers = 0;
+    /** @type {Set<String>} */
+    const knownHackingServers = new Set([]);
+    /** @type {Set<String>} */
+    const knownCloudServers = new Set([]);
+    /** @type {Map<String, Number>} */
+    const knownCloudServersRam = new Map();
     while (true) {
         // Get information about all the hosts we can see on the
         // network and its details. Note that the bought servers does
@@ -224,25 +238,50 @@ export async function main(ns) {
         const hostsNotHacked = hostsThatCanBeHacked.filter(host => !ns.hasRootAccess(host));
         if (hostsNotHacked.length > 0) hackHosts(ns, hostsNotHacked, CRACKING_PROGRAMS);
 
-        // We find all the servers we can use to hack other servers with.
-        const hackingServers = getHackingServerHostNames(ns, hosts, serverNamePrefix);
-        if (hackingServers.length != numberOfHackingServers) {
-            // TODO: We could solve this in a better way by converting
-            // two lists of hacking servers into sets and comparing
-            // those instead. That would make it easy for us to only
-            // copy the script to the new hosts, not disturbing the
-            // scripts allready running. I am lazy, so I will not be
-            // doing that.
-            numberOfHackingServers = hackingServers.length;
-            for (const host of hackingServers) {
-                // We don't want to overwrite the source file.
-                if (host != ns.getHostname()) {
-                    await ns.scp(PAYLOADS.ALLINONEGO, host);
-                    await ns.scp(PAYLOADS.HACK, host);
-                    await ns.scp(PAYLOADS.GROW, host);
-                    await ns.scp(PAYLOADS.WEAKEN, host);
-                    killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
-                }
+        // We find all the servers we can use to hack other servers with and
+        // compare it to known servers. We extract new unknown servers and work
+        // on those and also updating the known list of servers.
+        const currentHackingServers = getHackingServerHostNames(ns, hosts);
+        const newHackingServers = currentHackingServers.filter(host => !knownHackingServers.has(host));
+        knownHackingServers.clear();
+        for (const host of currentHackingServers) knownHackingServers.add(host);
+
+        for (const host of newHackingServers) {
+            if (host == ns.getHostname()) continue;
+            await ns.scp(PAYLOADS.ALLINONEGO, host);
+            await ns.scp(PAYLOADS.HACK, host);
+            await ns.scp(PAYLOADS.GROW, host);
+            await ns.scp(PAYLOADS.WEAKEN, host);
+            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
+        }
+
+        // This part is identical to the hacking servers part above with the
+        // exception of tracking the cloud servers RAM so that we can kill and
+        // rerun scripts using all the host RAM.
+        const currentCloudServers = getCloudServerHostNames(ns, serverNamePrefix);
+        const newCloudServers = currentCloudServers.filter(host => !knownCloudServers.has(host));
+        knownCloudServers.clear();
+        for (const host of currentCloudServers) knownCloudServers.add(host);
+
+        for (const host of newCloudServers) {
+            await ns.scp(PAYLOADS.ALLINONEGO, host);
+            await ns.scp(PAYLOADS.HACK, host);
+            await ns.scp(PAYLOADS.GROW, host);
+            await ns.scp(PAYLOADS.WEAKEN, host);
+            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
+
+            // New cloud server. We need to get the RAM size and store it to the
+            // map for later use and comparison.
+            knownCloudServersRam.set(host, ns.getServerMaxRam(host));
+        }
+
+        for (const currentCloudServer of currentCloudServers) {
+            const currentRam = ns.getServerMaxRam(currentCloudServer);
+            const previousRam = knownCloudServersRam.get(currentCloudServer);
+
+            if (previousRam === undefined || previousRam !== currentRam) {
+                knownCloudServersRam.set(currentCloudServer, currentRam);
+                killAllProcessesAndRunScript(ns, currentCloudServer, targetHost, PAYLOADS.ALLINONEGO);
             }
         }
 
