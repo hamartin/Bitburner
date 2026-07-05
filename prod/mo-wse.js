@@ -7,7 +7,8 @@
 //
 // The game has some weird inertia thing going on, meaning that it takes a while
 // to turn etc, so safe values seem to be .45 for short and .55 for long and .50
-// for selling the long/shorts.
+// for selling the long/shorts. It also seems that a forecast of less that .45
+// rare, so I haven't seen a single short in the time I have played.
 
 // TODO: The game will refuse to go long on a symbol if you are allready shorted
 // and vice versa. So we need to add logic to get rid of the trade in opposite
@@ -24,31 +25,31 @@ const LOG_LEVEL = Object.freeze({
 });
 
 export async function main(ns) {
-    ns.tprint(LOG_LEVEL.INFO + "Usage: run mo-wse.js <SHORTING ENABLED> <SLEEP TIME> <BUY LONG THRESHOLD> <SELL LONG THRESHOLD> <BUY SHORT THRESHOLD> <SELLING SHORT THRESHOLD>");
+    ns.tprint(LOG_LEVEL.INFO + "Usage: run mo-wse.js <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>");
     ns.tprint(LOG_LEVEL.INFO + "\t<SHORTING ENABLED>:");
     ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to false.");
     ns.tprint(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
     ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to 1000 which is a second.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<BUY LONG THRESHOLD>:");
+    ns.tprint(LOG_LEVEL.INFO + "\t<OPEN LONG THRESHOLD>:");
     ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .55 which is a strong buying forecast.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<SELLING LONG THRESHOLD>:");
+    ns.tprint(LOG_LEVEL.INFO + "\t<CLOSE LONG THRESHOLD>:");
     ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<BUY SHORT THRESHOLD>:");
+    ns.tprint(LOG_LEVEL.INFO + "\t<OPEN SHORT THRESHOLD>:");
     ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .45 which is a strong shorting forecast.");
-    ns.tprint(LOG_LEVEL.INFO + "\t<SELLING SHORT THRESHOLD>:");
+    ns.tprint(LOG_LEVEL.INFO + "\t<CLOSE SHORT THRESHOLD>:");
     ns.tprint(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
 
     const shortingEnabled = ns.args[0] === "true";
     let sleepTime = ns.args[1];
-    let buyLongThreshold = ns.args[2];
-    let sellLongThreshold = ns.args[3];
-    let buyShortThreshold = ns.args[4];
-    let sellShortThreshold = ns.args[5];
+    let openLongThreshold = ns.args[2];
+    let closeLongThreshold = ns.args[3];
+    let openShortThreshold = ns.args[4];
+    let closeShortThreshold = ns.args[5];
     if (sleepTime === undefined) sleepTime = 1000;
-    if (buyLongThreshold === undefined) buyLongThreshold = .55;
-    if (sellLongThreshold === undefined) sellLongThreshold = .50;
-    if (buyShortThreshold === undefined) buyShortThreshold = .45;
-    if (sellShortThreshold === undefined) sellShortThreshold = .50;
+    if (openLongThreshold === undefined) openLongThreshold = .55;
+    if (closeLongThreshold === undefined) closeLongThreshold = .50;
+    if (openShortThreshold === undefined) openShortThreshold = .45;
+    if (closeShortThreshold === undefined) closeShortThreshold = .50;
 
     const symbols = ns.stock.getSymbols();
     while (true) {
@@ -67,7 +68,7 @@ export async function main(ns) {
             const maxShares = ns.stock.getMaxShares(symbol);
 
             // Woohoo, forecast says buy the symbol/stock.
-            if (forecast > buyLongThreshold) {
+            if (forecast > openLongThreshold) {
                 const shares = maxShares - longShares;
 
                 if (shares > 0) {
@@ -85,7 +86,7 @@ export async function main(ns) {
             } 
             
             // Shit, the forecast tells us we should close our longs.
-            if (forecast < sellLongThreshold && longShares > 0) {
+            if (forecast < closeLongThreshold && longShares > 0) {
                 ns.stock.sellStock(symbol, longShares);
                 const profit = (price - longAveragePrice) * longShares;
                 let text = "profit";
@@ -94,7 +95,7 @@ export async function main(ns) {
             }
 
             // Woohoo, forecast says short the symbol/stock.
-            if (shortingEnabled && forecast < buyShortThreshold) {
+            if (shortingEnabled && forecast < openShortThreshold) {
                 const shares = maxShares - shortShares;
 
                 if (shares > 0) {
@@ -117,14 +118,14 @@ export async function main(ns) {
             }
 
             // Shit, the forecast tells us we should close/cover our shorted symbols/stocks.
-            if (shortingEnabled && forecast > sellShortThreshold && shortShares > 0) {
+            if (shortingEnabled && forecast > closeShortThreshold && shortShares > 0) {
                 // Shorting broke my head for a while. When shorting,
                 // you borrow shares, sell them immediately, hope the
                 // price goes down, buy them back later and return the
                 // stock. Thats why we are buying the short when
                 // closing/cover the initial trade.
                 ns.stock.buyShort(symbol, shortShares);
-                const profit = (price - shortAveragePrice) * shortShares;
+                const profit = (shortAveragePrice - price) * shortShares;
                 let text = "profit";
                 if (profit < 0) text = "loss";
                 ns.tprint(LOG_LEVEL.SUCCESS + `Sold (SHORTED)  ${shortShares} ${symbol} for a ${text} of ${ns.format.number(profit)}`);
