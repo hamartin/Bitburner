@@ -93,3 +93,4 @@ beat the game.
   - [Javascript tutorial - Geeks for geeks](https://www.geeksforgeeks.org/javascript/javascript-tutorial/)
   - [Casually Silent - Youtube](https://www.youtube.com/@casuallysilent)
   - Heavy use of the in game documentation
+  - Copilot has answered every single dumb question I have with satisfaction
