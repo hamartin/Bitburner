@@ -15,7 +15,15 @@
 // direction if one exist allready.
 
 /**
- * @typedef {{ shortingEnabled: Boolean, sleepTime: Number, openLongThreshold: Number, closeLongThreshold: Number, openShortThreshold: Number, closeShortThreshold: Number }} MyFlags
+ * @typedef {{
+ *  shortingEnabled: Boolean,
+ *  sleepTime: Number,
+ *  openLongThreshold: Number,
+ *  closeLongThreshold: Number,
+ *  openShortThreshold: Number,
+ *  closeShortThreshold: Number,
+ *  help: Boolean
+ * }} MyFlags
  */
 
 // I use this as an "enum" for logging purposes so that I can get
@@ -40,23 +48,20 @@ export async function main(ns) {
         ["closeLongThreshold", .50],
         ["openShortThreshold", .45],
         ["closeShortThreshold", .50],
+        ["help", false],
     ]));
 
     ns.ui.openTail();
 
-    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --shortingEnabled <BOOLEAN> --sleepTime <TIME> --openLongThreashold <THRESHOLD> --closeLongThreashold <THRESHOLD> --openShortThreshold <THRESHOLD> --closeShortThreshold <THRESHOLD>`);
-    ns.print(LOG_LEVEL.INFO + "\t<BOOLEAN>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to false.");
-    ns.print(LOG_LEVEL.INFO + "\t<TIME>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to 1000 which is a second.");
-    ns.print(LOG_LEVEL.INFO + "\t<OPEN LONG THRESHOLD>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .55 which is a strong buying forecast.");
-    ns.print(LOG_LEVEL.INFO + "\t<CLOSE LONG THRESHOLD>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
-    ns.print(LOG_LEVEL.INFO + "\t<OPEN SHORT THRESHOLD>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .45 which is a strong shorting forecast.");
-    ns.print(LOG_LEVEL.INFO + "\t<CLOSE SHORT THRESHOLD>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .50.");
+    if (flags.help) {
+        ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --shortingEnabled <BOOLEAN> --sleepTime <TIME> --openLongThreashold <THRESHOLD> --closeLongThreashold <THRESHOLD> --openShortThreshold <THRESHOLD> --closeShortThreshold <THRESHOLD>`);
+        ns.print(LOG_LEVEL.INFO + "\t--shortingEnabled -> Optional and defaults to false.");
+        ns.print(LOG_LEVEL.INFO + "\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
+        ns.print(LOG_LEVEL.INFO + "\t--openLongThreshold -> Optional and defaults to .55 which is a strong long forecast.");
+        ns.print(LOG_LEVEL.INFO + "\t--closeLongThreshold -> Optional and defaults to .50.");
+        ns.print(LOG_LEVEL.INFO + "\t--openShortThreshold -> Optional and defaults to .45 which is a strong short forecast.");
+        ns.print(LOG_LEVEL.INFO + "\t--closeShortThreshold -> Optional and defaults to .50.");
+    }
 
     const symbols = ns.stock.getSymbols();
     while (true) {

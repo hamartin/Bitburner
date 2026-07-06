@@ -1,5 +1,9 @@
 /**
- * @typedef {{ targetHost: String, serverNamePrefix: String, sleepTime: Number }} MyFlags
+ * @typedef {{
+ *  serverNamePrefix: String,
+ *  sleepTime: Number
+ *  _: (String | Number | Boolean)[]
+ * }} MyFlags
  */
 
 /**
@@ -211,18 +215,16 @@ export async function main(ns) {
 
     /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
-        ["targetHost", ""],
         ["serverNamePrefix", "Vogon-"],
         ["sleepTime", 10000],
     ]));
+    const targetHost = String(flags._[0]);
 
     // Target host is a requirement. If one is not given, we print a usage message and quit.
-    if (!flags.targetHost) {
-        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} --targetHost <HOST> --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
-        ns.tprint(LOG_LEVEL.ERROR + "\t<PREFIX>:");
-        ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to Vogon-");
-        ns.tprint(LOG_LEVEL.ERROR + "\t<TIME>:");
-        ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to 10000 equalling 10 seconds");
+    if (!targetHost) {
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
+        ns.tprint(LOG_LEVEL.ERROR + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
+        ns.tprint(LOG_LEVEL.ERROR + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seoncds.");
         return;
     }
 
@@ -267,7 +269,7 @@ export async function main(ns) {
             await ns.scp(PAYLOADS.HACK, host);
             await ns.scp(PAYLOADS.GROW, host);
             await ns.scp(PAYLOADS.WEAKEN, host);
-            killAllProcessesAndRunScript(ns, host, flags.targetHost, PAYLOADS.ALLINONEGO);
+            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
         }
 
         // This part is identical to the hacking servers part above with the
@@ -283,7 +285,7 @@ export async function main(ns) {
             await ns.scp(PAYLOADS.HACK, host);
             await ns.scp(PAYLOADS.GROW, host);
             await ns.scp(PAYLOADS.WEAKEN, host);
-            killAllProcessesAndRunScript(ns, host, flags.targetHost, PAYLOADS.ALLINONEGO);
+            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
 
             // New cloud server. We need to get the RAM size and store it to the
             // map for later use and comparison.
@@ -296,7 +298,7 @@ export async function main(ns) {
 
             if (previousRam === undefined || previousRam !== currentRam) {
                 knownCloudServersRam.set(currentCloudServer, currentRam);
-                killAllProcessesAndRunScript(ns, currentCloudServer, flags.targetHost, PAYLOADS.ALLINONEGO);
+                killAllProcessesAndRunScript(ns, currentCloudServer, targetHost, PAYLOADS.ALLINONEGO);
             }
         }
 

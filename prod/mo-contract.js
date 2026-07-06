@@ -15,7 +15,7 @@
  */ 
 
 /**
- * @typedef {{ fileName: String, hostName: String, contractType: String }} MyFlags
+ * @typedef {{ fileName: String, hostName: String, contractType: String, help: Boolean }} MyFlags
  */
 
 /**
@@ -28,12 +28,16 @@ export async function main(ns) {
     ["fileName", ""],
     ["hostName", ""],
     ["contractType", ""],
+    ["help", false],
   ]));
 
   /** @type {String[]} */
   const contractTypes = ns.codingcontract.getContractTypes();
-  if (!flags.fileName || !flags.hostName || !flags.contractType) {
-    ns.tprint(`Usage: run ${ns.getScriptName()} --fileName <FILENAME> --hostName <NAME> --contractType <TYPE>`);
+  if (!flags.fileName || !flags.hostName || !flags.contractType || flags.help) {
+    ns.tprint(`Usage: run ${ns.getScriptName()} --fileName <FILENAME> --hostName <NAME> --contractType <TYPE> --help true`);
+    ns.tprint("\t--fileName -> The filename to the file that has the contract.");
+    ns.tprint("\t--hostName -> The hostname to the server which has the file on it.");
+    ns.tprint("\t--contractType -> The type of contract to solve. Type something random to get a list of types.");
     return
   } 
 

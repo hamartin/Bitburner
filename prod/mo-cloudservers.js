@@ -1,5 +1,5 @@
 /**
- * @typedef {{ serverNamePrefix: String, sleepTime: Number }} MyFlags
+ * @typedef {{ serverNamePrefix: String, sleepTime: Number, help: Boolean }} MyFlags
  */
 
 //
@@ -33,17 +33,16 @@ export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["serverNamePrefix", "Vogon-"],
         ["sleepTime", 10000],
+        ["help", false],
     ]));
 
     ns.ui.openTail();
 
-    ns.print(LOG_LEVEL.INFO + "Note that you can override default settings.");
-    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
-    ns.print(LOG_LEVEL.INFO + "\t<PREFIX:");
-    ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to Vogon-");
-    ns.print(LOG_LEVEL.INFO + "\t<TIME>:");
-    ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to 10000 equalling 10 seconds.");
-    ns.print(LOG_LEVEL.INFO + "");
+    if (flags.help) {
+        ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
+        ns.print(LOG_LEVEL.INFO + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
+        ns.print(LOG_LEVEL.INFO + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seconds.");
+    }
 
     const maxServers = ns.cloud.getServerLimit();
     while (true) {
