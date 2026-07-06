@@ -25,7 +25,9 @@
  *  volatilityThreshold: Number,
  *  help: Boolean
  * }} MyFlags
- * 
+ */
+
+/**
  * @typedef {"ERROR: " | "SUCCESS: " | "INFO: " | "WARN: " | "DEBUG: "} LogLevel
  */
 
@@ -81,6 +83,15 @@ export async function main(ns) {
 
     ns.print(LOG_LEVEL.INFO + "Starting World Stock Exchange trader.")
     ns.print(LOG_LEVEL.INFO);
+
+    ns.print("");
+    ns.print(LOG_LEVEL.INFO + `Settings:`);
+    ns.print(LOG_LEVEL.INFO + `\tLong open threshold: ${flags.openLongThreshold}`);
+    ns.print(LOG_LEVEL.INFO + `\tLong close threshold: ${flags.closeLongThreshold}`);
+    ns.print(LOG_LEVEL.INFO + `\tShort open threshold: ${flags.openShortThreshold}`);
+    ns.print(LOG_LEVEL.INFO + `\tShort close threshold: ${flags.closeShortThreshold}`);
+    ns.print(LOG_LEVEL.INFO + `\tVolatility threshold: ${flags.volatilityThreshold}`);
+    ns.print("");
 
     const symbols = ns.stock.getSymbols();
     while (true) {
