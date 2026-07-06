@@ -3,6 +3,7 @@
  *  maxMoneyMultiplier: Number,
  *  securityThresholdAdd: Number,
  *  _: (String | Number | Boolean)[]
+ *  help: Boolean,
  * }} MyFlags
  */
 
@@ -30,11 +31,12 @@ export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["maxMoneyMultiplier", .75],
         ["securityThresholdAdd", 5],
+        ["help", false],
     ]));
     const targetHost = String(flags._[0]);
 
     // Target host is a requirement. We simply exit with a usage message if one is not given.
-    if (!targetHost) {
+    if (targetHost == "undefined" || flags.help) {
         ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOSTNAME> --maxMoneyMultiplier <MULTIPLIER> --securityThresholdAdd <THRESHOLD ADD>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t<TARGET HOSTNAME> -> Required.");
         ns.tprint(LOG_LEVEL.ERROR + "\t--maxMoneyMultiplier -> Optional and defaults to .75");
