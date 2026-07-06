@@ -117,7 +117,7 @@ function buildFullPath(node) {
  */
 function buildConnectCommand(path) {
     const [first, ...rest] = path;
-    let cmd = first; // always "home"
+    let cmd = "  " + first; // always "home"
     for (const host of rest) {
         cmd += `; connect ${host}`;
     }
