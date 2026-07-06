@@ -106,3 +106,4 @@ beat the game.
   - [Casually Silent - Youtube](https://www.youtube.com/@casuallysilent)
   - Heavy use of the in game documentation
   - Copilot has answered every single dumb question I have with satisfaction
+  - [The Black Hat - Youtube](https://www.youtube.com/@theblackhat5473)

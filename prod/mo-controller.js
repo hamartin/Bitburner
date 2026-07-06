@@ -1,8 +1,9 @@
 /**
  * @typedef {{
  *  serverNamePrefix: String,
- *  sleepTime: Number
- *  _: (String | Number | Boolean)[]
+ *  sleepTime: Number,
+ *  _: (String | Number | Boolean)[],
+ *  help: Boolean
  * }} MyFlags
  */
 
@@ -217,11 +218,12 @@ export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["serverNamePrefix", "Vogon-"],
         ["sleepTime", 10000],
+        ["help", false],
     ]));
     const targetHost = String(flags._[0]);
 
     // Target host is a requirement. If one is not given, we print a usage message and quit.
-    if (!targetHost) {
+    if (targetHost == "undefined" || flags.help) {
         ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
         ns.tprint(LOG_LEVEL.ERROR + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seoncds.");

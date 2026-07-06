@@ -118,5 +118,6 @@ function buildConnectCommand(path) {
     for (const host of rest) {
         cmd += `; connect ${host}`;
     }
+    cmd += "; backdoor";
     return cmd;
 }
