@@ -51,8 +51,6 @@ export async function main(ns) {
         ["help", false],
     ]));
 
-    ns.ui.openTail();
-
     if (flags.help) {
         ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --shortingEnabled <BOOLEAN> --sleepTime <TIME> --openLongThreashold <THRESHOLD> --closeLongThreashold <THRESHOLD> --openShortThreshold <THRESHOLD> --closeShortThreshold <THRESHOLD>`);
         ns.print(LOG_LEVEL.INFO + "\t--shortingEnabled -> Optional and defaults to false.");
@@ -62,6 +60,11 @@ export async function main(ns) {
         ns.print(LOG_LEVEL.INFO + "\t--openShortThreshold -> Optional and defaults to .45 which is a strong short forecast.");
         ns.print(LOG_LEVEL.INFO + "\t--closeShortThreshold -> Optional and defaults to .50.");
     }
+
+    // We prepare the logging.
+    ns.ui.openTail();
+    ns.disableLog('ALL');
+    ns.clearLog();
 
     const symbols = ns.stock.getSymbols();
     while (true) {

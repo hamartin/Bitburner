@@ -7,7 +7,10 @@
 
 /** @param {NS} ns **/
 export async function main(ns) {
+    // We prepare the logging.
     ns.ui.openTail();
+    ns.disableLog('ALL');
+    ns.clearLog();
 
     const tree = buildTree(ns, "home");
     const found = [];

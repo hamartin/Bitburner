@@ -18,7 +18,10 @@
  * @returns 
  */
 export async function main(ns) {
+    // We prepare the logging.
     ns.ui.openTail();
+    ns.disableLog('ALL');
+    ns.clearLog();
 
     const hackingLevel = ns.getHackingLevel();
     const tree = await buildTree(ns, "home");
