@@ -196,12 +196,6 @@ export function hackHosts(ns, hosts, crackingPrograms) {
  * @param {NS} ns
  */
 export async function main(ns) {
-    ns.ui.openTail();
-
-    //
-    // Constants which are used in different places.
-    //
-
     // Maps the filename in the terminal to the Netscript function.
     /**
      * @type {Map<String, CrackFunction>}
@@ -238,6 +232,11 @@ export async function main(ns) {
         }
     }
 
+    // We prepare the logging.
+    ns.ui.openTail();
+    ns.disableLog('ALL');
+    ns.clearLog();
+
     /** @type {ServerSet} */
     const knownHackingServers = new Set([]);
     /** @type {ServerSet} */
@@ -271,6 +270,7 @@ export async function main(ns) {
             await ns.scp(PAYLOADS.HACK, host);
             await ns.scp(PAYLOADS.GROW, host);
             await ns.scp(PAYLOADS.WEAKEN, host);
+            ns.print(LOG_LEVEL.INFO + `Copied all payload files to ${targetHost}.`);
             killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
         }
 
@@ -287,6 +287,7 @@ export async function main(ns) {
             await ns.scp(PAYLOADS.HACK, host);
             await ns.scp(PAYLOADS.GROW, host);
             await ns.scp(PAYLOADS.WEAKEN, host);
+            ns.print(LOG_LEVEL.INFO + `Copied all payload files to ${targetHost}.`);
             killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
 
             // New cloud server. We need to get the RAM size and store it to the
@@ -300,6 +301,7 @@ export async function main(ns) {
 
             if (previousRam === undefined || previousRam !== currentRam) {
                 knownCloudServersRam.set(currentCloudServer, currentRam);
+                ns.print(LOG_LEVEL.INFO + `Cloudserver ${currentCloudServer} has increased its RAM. Restarting all scripts.`);
                 killAllProcessesAndRunScript(ns, currentCloudServer, targetHost, PAYLOADS.ALLINONEGO);
             }
         }
@@ -320,4 +322,5 @@ export async function main(ns) {
 function killAllProcessesAndRunScript(ns, host, targetHost, fileName) {
     ns.killall(host);
     executeScriptOnRemoteHost(ns, host, targetHost, fileName);
+    ns.print(LOG_LEVEL.INFO + `Killed all processes and started script ${fileName} on host ${host}.`);
 }
