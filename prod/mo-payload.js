@@ -29,18 +29,18 @@ export async function main(ns) {
         ["securityThresholdAdd", 5],
     ]));
 
-    const moneyThresh = ns.getServerMaxMoney(flags.targetHost) * flags.maxMoneyMultiplier;
-    const securityThresh = ns.getServerMinSecurityLevel(flags.targetHost) + flags.securityThresholdAdd;
-
     // Target host is a requirement. We simply exit with a usage message if one is not given.
     if (!flags.targetHost) {
-        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST NAME> <MAX MONEY MULTIPLIER> <SECURITY THRESHOLD ADD>`);
-        ns.tprint(LOG_LEVEL.ERROR + "\t<MAX MONEY MULTIPLIER>:");
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} --targetHost <HOSTNAME> --maxMoneyMultiplier <MULTIPLIER> --securityThresholdAdd <THRESHOLD ADD>`);
+        ns.tprint(LOG_LEVEL.ERROR + "\t<MULTIPLIER>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Optional and defaults to 0.75");
-        ns.tprint(LOG_LEVEL.ERROR + "\t<SECURITY THRESHOLD ADD>:");
+        ns.tprint(LOG_LEVEL.ERROR + "\t<THRESHOLD ADD>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Optional and defaults to 5");
         return;
     }
+
+    const moneyThresh = ns.getServerMaxMoney(flags.targetHost) * flags.maxMoneyMultiplier;
+    const securityThresh = ns.getServerMinSecurityLevel(flags.targetHost) + flags.securityThresholdAdd;
 
     while (true) {
         if (ns.getServerSecurityLevel(flags.targetHost) > securityThresh) {

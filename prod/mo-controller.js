@@ -218,13 +218,11 @@ export async function main(ns) {
 
     // Target host is a requirement. If one is not given, we print a usage message and quit.
     if (!flags.targetHost) {
-        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> <CLOUD SERVER NAME PREFIX> <SLEEP TIME>`);
-        ns.tprint(LOG_LEVEL.ERROR + "\t<CLOUD SERVER NAME PREFIX>:");
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} --targetHost <HOST> --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
+        ns.tprint(LOG_LEVEL.ERROR + "\t<PREFIX>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to Vogon-");
-        ns.tprint(LOG_LEVEL.ERROR + "\t<SLEEP TIME>:");
+        ns.tprint(LOG_LEVEL.ERROR + "\t<TIME>:");
         ns.tprint(LOG_LEVEL.ERROR + "\t  Is optional and defaults to 10000 equalling 10 seconds");
-        ns.tprint(LOG_LEVEL.ERROR + "");
-        ns.tprint(LOG_LEVEL.ERROR + "Note that if you specify sleep time on the command line, you have to specify server name prefix as well.");
         return;
     }
 

@@ -33,7 +33,7 @@ export async function main(ns) {
   /** @type {String[]} */
   const contractTypes = ns.codingcontract.getContractTypes();
   if (!flags.fileName || !flags.hostName || !flags.contractType) {
-    ns.tprint("Usage: run mo-contract.js <FILENAME> <HOSTNAME> <CONTRACT TYPE>");
+    ns.tprint(`Usage: run ${ns.getScriptName()} --fileName <FILENAME> --hostName <NAME> --contractType <TYPE>`);
     return
   } 
 

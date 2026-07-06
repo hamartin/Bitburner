@@ -44,10 +44,10 @@ export async function main(ns) {
 
     ns.ui.openTail();
 
-    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} <SHORTING ENABLED> <SLEEP TIME> <OPEN LONG THRESHOLD> <CLOSE LONG THRESHOLD> <OPEN SHORT THRESHOLD> <CLOSE SHORT THRESHOLD>`);
-    ns.print(LOG_LEVEL.INFO + "\t<SHORTING ENABLED>:");
+    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --shortingEnabled <BOOLEAN> --sleepTime <TIME> --openLongThreashold <THRESHOLD> --closeLongThreashold <THRESHOLD> --openShortThreshold <THRESHOLD> --closeShortThreshold <THRESHOLD>`);
+    ns.print(LOG_LEVEL.INFO + "\t<BOOLEAN>:");
     ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to false.");
-    ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
+    ns.print(LOG_LEVEL.INFO + "\t<TIME>:");
     ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to 1000 which is a second.");
     ns.print(LOG_LEVEL.INFO + "\t<OPEN LONG THRESHOLD>:");
     ns.print(LOG_LEVEL.INFO + "\t  Optional and defaults to .55 which is a strong buying forecast.");

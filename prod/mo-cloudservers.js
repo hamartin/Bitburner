@@ -38,10 +38,10 @@ export async function main(ns) {
     ns.ui.openTail();
 
     ns.print(LOG_LEVEL.INFO + "Note that you can override default settings.");
-    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} <SERVER NAME PREFIX> <SLEEP TIME>`);
-    ns.print(LOG_LEVEL.INFO + "\t<SERVER NAME PREFIX:");
+    ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
+    ns.print(LOG_LEVEL.INFO + "\t<PREFIX:");
     ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to Vogon-");
-    ns.print(LOG_LEVEL.INFO + "\t<SLEEP TIME>:");
+    ns.print(LOG_LEVEL.INFO + "\t<TIME>:");
     ns.print(LOG_LEVEL.INFO + "\t  Is optional and defaults to 10000 equalling 10 seconds.");
     ns.print(LOG_LEVEL.INFO + "");
 
