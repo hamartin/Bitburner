@@ -17,7 +17,7 @@ const LOG_LEVEL = Object.freeze({
 });
 
 // The different amount of RAM you can have on a cloud purchased server. We are
-// ignoring the 2GB alternative as almost all scripts will be bigger than this.
+// ignoring the 2GB and 4GB alternatives as almost all scripts will be bigger than this.
 const ramTiers = [
     8, 16, 32, 64, 128, 256, 512,
     1024, 2048, 4096, 8192, 16384,
@@ -36,13 +36,17 @@ export async function main(ns) {
         ["help", false],
     ]));
 
-    ns.ui.openTail();
-
     if (flags.help) {
-        ns.print(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
-        ns.print(LOG_LEVEL.INFO + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
-        ns.print(LOG_LEVEL.INFO + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seconds.");
+        ns.tprint(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
+        ns.tprint(LOG_LEVEL.INFO + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
+        ns.tprint(LOG_LEVEL.INFO + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seconds.");
+        return;
     }
+
+    // We prepare the logging.
+    ns.ui.openTail();
+    ns.disableLog('ALL');
+    ns.clearLog();
 
     const maxServers = ns.cloud.getServerLimit();
     while (true) {
@@ -57,7 +61,7 @@ export async function main(ns) {
                     //const hostName = serverNamePrefix + boughtServers.length;
                     ns.cloud.purchaseServer(hostName, ramTier);
                     ns.print(
-                        LOG_LEVEL.SUCCESS +
+                        LOG_LEVEL.INFO +
                         `Bought new server ${hostName} with ${ramTier}GB`
                     );
                 }
@@ -88,7 +92,7 @@ export async function main(ns) {
             if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
                 ns.cloud.upgradeServer(smallest, nextRamTier);
                 ns.print(
-                    LOG_LEVEL.SUCCESS +
+                    LOG_LEVEL.INFO +
                     `Upgraded RAM on ${smallest} from ${ramTier}GB to ${nextRamTier}GB`
                 );
             }
