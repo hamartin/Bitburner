@@ -32,14 +32,14 @@ export async function main(ns) {
     /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["serverNamePrefix", "Vogon-"],
-        ["sleepTime", 10000],
+        ["sleepTime", 1000],
         ["help", false],
     ]));
 
     if (flags.help) {
         ns.tprint(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName()} --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
         ns.tprint(LOG_LEVEL.INFO + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
-        ns.tprint(LOG_LEVEL.INFO + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seconds.");
+        ns.tprint(LOG_LEVEL.INFO + "\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
         return;
     }
 
