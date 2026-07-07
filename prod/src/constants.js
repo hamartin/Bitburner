@@ -39,3 +39,6 @@ export const RAM_TIERS = [
     32768, 65536, 131072, 262144,
     524288, 1048576,
 ];
+
+// The amount to steal from a server for each batch were firing off.
+export const STEAL_PERCENTAGE = .1

@@ -26,6 +26,45 @@ export function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileNam
 }
 
 /**
+ * Returns the host which is deemed best to attack at the current point in time.
+ * The function does this: score = (maxMoney * growth) / hackTime
+ * The higher the score, the better the host is.
+ * 
+ * The function does not use minSecurity directly as that is handled by hackAnalyze.
+ * Weaken time is always the time it takes to hack the server times 4. Since the ratio
+ * does not change between servers, we don't need to consider it.
+ * 
+ * The function also takes your hacking level into account through the analyze function.
+ * So if you're much lower hack level than the target host, then your score for that host
+ * will automatically be lower.
+ * 
+ * @param {NS} ns    - Netscript context
+ * @returns {string} - The hostname of the host which is "best" to attack
+ */
+export function getBestHostToAttack(ns) {
+    const hostNames = getNetworkHostNames(ns);
+    const rootedHosts = hostNames.filter(s => ns.hasRootAccess(s));
+
+    let best = null;
+    let bestScore = -Infinity;
+    for (const hostName of rootedHosts) {
+        const maxMoney = ns.getServerMaxMoney(hostName);
+        if (maxMoney <= 0) continue;
+
+        const hackPercent = ns.hackAnalyze(hostName);
+        const hackTime = ns.getHackTime(hostName);
+        const growth = ns.getGrowTime(hostName);
+        const score = (maxMoney * hackPercent * growth) / hackTime;
+
+        if (score > bestScore) {
+            bestScore = score;
+            best = hostName;
+        }
+    }
+    return best ?? "n00dles";
+}
+
+/**
  * This bit of the code handles getting all the bought servers
  * which does not show in the normal scans.
  * 

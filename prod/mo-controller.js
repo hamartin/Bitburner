@@ -130,3 +130,15 @@ export async function main(ns) {
         await ns.sleep(flags.sleepTime);
     }
 }
+
+/**
+ * Function enables us to push tab when writing host names in the terminal and
+ * we will get a list of servers to choose from
+ * 
+ * @param {AutocompleteData} data - Autocomplete context containing servers, scripts, txt files, and flags
+ * @param {string[]} args         - Arguments typed so far in the terminal
+ * @returns {string[]}            - List of autocomplete suggestions
+ */
+export function autocomplete(data, args) {
+  return data.servers;
+}
