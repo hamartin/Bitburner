@@ -1,4 +1,11 @@
-/** @param {NS} ns */
+/**
+ * To run the hack script an un-named argument with the host name of the host
+ * you want to attack must be given.
+ * 
+ * @param {NS} ns
+ */
 export async function main(ns) {
-    ns.hack();
+    if (ns.args[0] === undefined) ns.alert("No host name argument was given.");
+    const targetHost = String(ns.args[0]);
+    await ns.hack(targetHost);
 }
