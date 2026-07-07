@@ -1,3 +1,11 @@
+import {
+    CLOUDSERVER_NAME_PREFIX,
+    CRACKING_PROGRAMS,
+    LOG_LEVEL,
+    PAYLOADS,
+} from "./src/constants.js";
+import { LogMessage } from "./src/logging.js";
+
 /**
  * @typedef {{
  *  serverNamePrefix: String,
@@ -8,10 +16,6 @@
  */
 
 /**
- * @typedef {(host: string) => void} CrackFunction
- */
-
-/**
  * @typedef {Set<String>} ServerSet
  */
 
@@ -19,40 +23,15 @@
  * @typedef {Map<String, Number>} ServerRamMap
  */
 
-//
-// Global constants
-//
-
-// I use this as an "enum" for logging purposes so that I can get
-// colored output.
-const LOG_LEVEL = Object.freeze({
-    "ERROR": "ERROR: ",
-    "SUCCESS": "SUCCESS: ",
-    "INFO": "INFO: ", 
-    "WARN": "WARN: ",
-    "DEBUG": "DEBUG: ",
-});
-
-// I use this as an "enum" to reference the different scripts I use.
-const PAYLOADS = Object.freeze({
-    "HACK": "mo-hack.js",
-    "WEAKEN": "mo-weaken.js",
-    "GROW": "mo-grow.js",
-    "ALLINONEGO": "mo-payload.js",
-})
-
-//
-// Functions
-//
-
 /**
- * @param {NS} ns 
- * @param {string} hostName 
- * @param {string} targetHost 
- * @param {string} virusFileName 
+ * Executes a script on a server, maxing out the number of threads.
+ * 
+ * @param {NS} ns                - Netscript context
+ * @param {string} hostName      - Hostname for the host to run the script on
+ * @param {string} targetHost    - Hostname for the host to attack
+ * @param {string} virusFileName - Filename of the "virus" to attack the target host with
  */
 function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileName) {
-    // Executes a script on a server, maxing out the number of threads.
     const virusRamUsage = ns.getScriptRam(virusFileName);
     const maxRam = ns.getServerMaxRam(hostName);
     const threads = Math.floor(maxRam / virusRamUsage);
@@ -60,48 +39,48 @@ function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileName) {
 }
 
 /**
- * @param {NS} ns 
- * @param {string[]} hosts 
- * @returns {string[]}
+ * Returns a list of host names for hacking servers we have allready bought.
+ * 
+ * @param {NS} ns          - Netscript context
+ * @param {string[]} hosts - List of servers
+ * @returns {string[]}     - List of servers that can be used for hacking
  */
 function getHackingServerHostNames(ns, hosts) {
-    // Function returns a list of host names for hacking servers we have
-    // allready bought.
     const hackingServers = hosts.filter(host => ns.hasRootAccess(host) && ns.getServerMaxRam(host) > 0);
     return hackingServers;
 }
 
 /**
- * @param {NS} ns 
- * @param {String} namePrefix 
- * @returns {String[]}
+ * This bit of the code handles getting all the bought servers
+ * which does not show in the normal scans.
+ * 
+ * @param {NS} ns      - Netscript context
+ * @returns {String[]} - List of cloudserver names we have bought
  */
-function getCloudServerHostNames(ns, namePrefix) {
-    // This bit of the code handles getting all the bought servers
-    // which does not show in the normal scans.
+function getCloudServerHostNames(ns) {
     const hostNames = [];
 
     let i = 0;
-    while (ns.serverExists(namePrefix + i)) {
-        hostNames.push(namePrefix + i);
+    while (ns.serverExists(CLOUDSERVER_NAME_PREFIX + i)) {
+        hostNames.push(CLOUDSERVER_NAME_PREFIX + i);
         i++;
     }
     return hostNames;
 }
 
 /**
- * @param {NS} ns 
- * @param {Map<string, Object>} hosts 
- * @param {Map<string, CrackFunction>} crackingPrograms
- * @returns {string[]}
+ * Gets a list of hosts wee can see on the network and compares the
+ * hosts required hacking level to the players current hacking level.
+ * If the player has a high enough hacking level to hack the host, the
+ * host is added to a list and returned at the end of the execution.
+ * 
+ * @param {NS} ns                     - Netscript context
+ * @param {Map<string, object>} hosts - A map with hostnames as key and details as values
+ * @returns {string[]}                - A list of strings where each index is a hostname for a host that can be hacked
  */
-function getHostsThatCanBeHacked(ns, hosts, crackingPrograms) {
-    // Gets a list of hosts wee can see on the network and compares the
-    // hosts required hacking level to the players current hacking level.
-    //If the player has a high enough hacking level to hack the host, the
-    // host is added to a list and returned at the end of the execution.
+function getHostsThatCanBeHacked(ns, hosts) {
     const playerHackingLevel = ns.getHackingLevel();
-    const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns, crackingPrograms);
+    const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns);
 
     const hostsThatCanBeHacked = [];
     for (const [host, details] of hosts) {
@@ -116,13 +95,14 @@ function getHostsThatCanBeHacked(ns, hosts, crackingPrograms) {
 }
 
 /**
- * @param {NS} ns 
- * @returns {string[]}
+ * The function will start initially at the host which the script is
+ * run on and scan all servers in the network, returning a list of
+ * all servers found.
+ * 
+ * @param {NS} ns      - Netscript context
+ * @returns {string[]} - A list of hostnames for hosts we can see on the network
  */
 function getNetworkHostNames(ns) {
-    // The function will start initially at the host which the script is
-    // run on and scan all servers in the network, returning a list of
-    // all servers found.
     const visited = new Set([ns.getHostname(), ]);
     const stack = [ns.getHostname(), ];
 
@@ -140,13 +120,14 @@ function getNetworkHostNames(ns) {
 }
 
 /**
- * @param {NS} ns 
- * @param {string[]} hostNames 
- * @returns {Map<string, Object>}
+ * The function will return a map of all servers in the network, with
+ * the server name as the key and the server details as the value.
+ * 
+ * @param {NS} ns                 - Netscript context
+ * @param {string[]} hostNames    - A list of hostnames to return details for
+ * @returns {Map<string, Object>} - A map with hostnames as keys and details as values
  */
 function getNetworkHostsDetails(ns, hostNames) {
-    // The function will return a map of all servers in the network, with
-    // the server name as the key and the server details as the value.
     const hosts = new Map();
     for (const host of hostNames) {
         const details = ns.getServer(host);
@@ -156,61 +137,60 @@ function getNetworkHostsDetails(ns, hostNames) {
 }
 
 /**
- * @param {NS} ns
- * @param {Map<string, CrackFunction>} crackingPrograms
- * @returns {number}
+ * Returns the number of cracking programs the player has on their home server
+ * 
+ * @param {NS} ns    - Netscript context
+ * @returns {number} - The number of cracking programs we own
  */
-function getNumberOfCrackingPrograms(ns, crackingPrograms) {
-    // Simple returns the number of cracking programs the player has on
-    // their home server.
+function getNumberOfCrackingPrograms(ns) {
     let numberOfCrackingPrograms = 0;
-    for (const [program, func] of crackingPrograms) {
-        if (ns.fileExists(program, "home")) numberOfCrackingPrograms++;
+    for (const programName of CRACKING_PROGRAMS) {
+        if (ns.fileExists(programName, "home")) numberOfCrackingPrograms++;
     }
     return numberOfCrackingPrograms;
 }
 
 /**
- * @param {NS} ns
- * @param {string[]} hosts
- * @param {Map<string, CrackFunction>} crackingPrograms
+ * Hacks the hosts given as an argument using the tools we currently have
+ * available and nukes it to finish things of
+ * 
+ * @param {NS} ns          - Netscript context
+ * @param {string[]} hosts - List of hostnames to hack and nuke
  */
-export function hackHosts(ns, hosts, crackingPrograms) {
+export function hackHosts(ns, hosts) {
     for (const host of hosts) {
-        for (const [program, func] of crackingPrograms) {
-            if (ns.fileExists(program, "home")) {
-                func(host);
-                ns.print(LOG_LEVEL.SUCCESS + `Executed ${program} on ${host}`);
+        for (const programName of CRACKING_PROGRAMS) {
+            if (!ns.fileExists(programName, "home")) {
+                continue;
             }
+            switch (programName) {
+                case "BruteSSH.exe":
+                    ns.brutessh(host);
+                    break;
+                case "FTPCrack.exe":
+                    ns.ftpcrack(host);
+                    break;
+                case "relaySMTP.exe":
+                    ns.relaysmtp(host);
+                    break;
+                case "HTTPWorm.exe":
+                    ns.httpworm(host);
+                    break;
+                case "SQLInject.exe":
+                    ns.sqlinject(host);
+                    break;
+            }
+            LogMessage(ns, LOG_LEVEL.SUCCESS, `Executed ${programName} on ${host}`);
         }
         ns.nuke(host);
-        ns.print(LOG_LEVEL.SUCCESS + `Nuked ${host}`);
+        LogMessage(ns, LOG_LEVEL.SUCCESS, `Nuked ${host}`);
     }
 }
 
-//
-// Main program
-//
-
-/**
- * @param {NS} ns
- */
+/** @param {NS} ns */
 export async function main(ns) {
-    // Maps the filename in the terminal to the Netscript function.
-    /**
-     * @type {Map<String, CrackFunction>}
-     */
-    const CRACKING_PROGRAMS = new Map([
-        ["BruteSSH.exe", ns.brutessh],
-        ["FTPCrack.exe", ns.ftpcrack],
-        ["relaySMTP.exe", ns.relaysmtp],
-        ["HTTPWorm.exe", ns.httpworm],
-        ["SQLInject.exe", ns.sqlinject],
-    ]);
-
     /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
-        ["serverNamePrefix", "Vogon-"],
         ["sleepTime", 10000],
         ["help", false],
     ]));
@@ -218,8 +198,7 @@ export async function main(ns) {
 
     // Target host is a requirement. If one is not given, we print a usage message and quit.
     if (targetHost == "undefined" || flags.help) {
-        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> --serverNamePrefix <PREFIX> --sleepTime <TIME>`);
-        ns.tprint(LOG_LEVEL.ERROR + "\t--serverNamePrefix -> Optional and defaults to Vogon-");
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> --sleepTime <TIME>`);
         ns.tprint(LOG_LEVEL.ERROR + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seoncds.");
         return;
     }
@@ -252,9 +231,9 @@ export async function main(ns) {
         const hostsDetails = getNetworkHostsDetails(ns, hosts);
 
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
-        const hostsThatCanBeHacked = getHostsThatCanBeHacked(ns, hostsDetails, CRACKING_PROGRAMS);
+        const hostsThatCanBeHacked = getHostsThatCanBeHacked(ns, hostsDetails);
         const hostsNotHacked = hostsThatCanBeHacked.filter(host => !ns.hasRootAccess(host));
-        if (hostsNotHacked.length > 0) hackHosts(ns, hostsNotHacked, CRACKING_PROGRAMS);
+        if (hostsNotHacked.length > 0) hackHosts(ns, hostsNotHacked);
 
         // We find all the servers we can use to hack other servers with and
         // compare it to known servers. We extract new unknown servers and work
@@ -277,7 +256,7 @@ export async function main(ns) {
         // This part is identical to the hacking servers part above with the
         // exception of tracking the cloud servers RAM so that we can kill and
         // rerun scripts using all the host RAM.
-        const currentCloudServers = getCloudServerHostNames(ns, flags.serverNamePrefix);
+        const currentCloudServers = getCloudServerHostNames(ns);
         const newCloudServers = currentCloudServers.filter(host => !knownCloudServers.has(host));
         knownCloudServers.clear();
         for (const host of currentCloudServers) knownCloudServers.add(host);
@@ -305,19 +284,18 @@ export async function main(ns) {
                 killAllProcessesAndRunScript(ns, currentCloudServer, targetHost, PAYLOADS.ALLINONEGO);
             }
         }
-
-        // Putting a sleep here as we do not need this script to run at
-        // full speed. I'm ok with it running every second to reduce
-        // how often the script evaulates the current state.
         await ns.sleep(flags.sleepTime);
     }
 }
 
 /**
- * @param {NS} ns
- * @param {string} host
- * @param {string} targetHost
- * @param {string} fileName
+ * Kills all the processes currently running on the attacking host and starts
+ * the "virus" which will attack the target host
+ * 
+ * @param {NS} ns             - Netscript context
+ * @param {string} host       - Hostname of the host to run the virus on
+ * @param {string} targetHost - Hostname of the host to attack
+ * @param {string} fileName   - Filename of the virus to attack with
  */
 function killAllProcessesAndRunScript(ns, host, targetHost, fileName) {
     ns.killall(host);

@@ -1,6 +1,4 @@
-/**
- * @param {NS} ns 
- */
+/** @param {NS} ns */
 export async function main(ns) {
-    ns.hack(ns.getHostname());
+    ns.hack();
 }

@@ -7,12 +7,6 @@
  * }} MyFlags
  */
 
-//
-// Global constants
-//
-
-// I use this as an "enum" for logging purposes so that I can get
-// colored output.
 const LOG_LEVEL = Object.freeze({
     "ERROR": "ERROR: ",
     "SUCCESS": "SUCCESS: ",
@@ -22,7 +16,6 @@ const LOG_LEVEL = Object.freeze({
 });
 
 /**
- * 
  * @param {NS} ns 
  * @returns 
  */
