@@ -4,6 +4,7 @@ import {
 } from "./src/constants.js";
 import { LogMessage } from "./src/logging.js";
 import {
+    getBestHostToAttack,
     getCloudServerHostNames,
     getHackingServerHostNames,
     getHostsThatCanBeHacked,
@@ -18,7 +19,7 @@ import {
  *  serverNamePrefix: String,
  *  sleepTime: Number,
  *  _: (String | Number | Boolean)[],
- *  help: Boolean
+ *  help: Boolean,
  * }} MyFlags
  */
 
@@ -34,15 +35,14 @@ import {
 export async function main(ns) {
     /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
-        ["sleepTime", 10000],
+        ["sleepTime", 1000],
         ["help", false],
     ]));
-    const targetHost = String(flags._[0]);
 
-    // Target host is a requirement. If one is not given, we print a usage message and quit.
-    if (targetHost == "undefined" || flags.help) {
-        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} <TARGET HOST> --sleepTime <TIME>`);
-        ns.tprint(LOG_LEVEL.ERROR + "\t--sleepTime -> Optional and defaults to 10000 equalling 10 seoncds.");
+    if (flags.help) {
+        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} --sleepTime <TIME> --help`);
+        ns.tprint(LOG_LEVEL.ERROR + "\t--sleepTime -> Optional and defaults to 1000 equalling 1 seoncd.");
+        ns.tprint(LOG_LEVEL.ERROR + "\t--help -> Optional and shows this help screen.");
         return;
     }
 
@@ -65,6 +65,7 @@ export async function main(ns) {
     const knownCloudServers = new Set([]);
     /** @type {ServerRamMap} */
     const knownCloudServersRam = new Map();
+    let previousTargetHost = null;
     while (true) {
         // Get information about all the hosts we can see on the
         // network and its details. Note that the bought servers does
@@ -86,7 +87,18 @@ export async function main(ns) {
         knownHackingServers.clear();
         for (const host of currentHackingServers) knownHackingServers.add(host);
 
-        for (const host of newHackingServers) {
+        // Finds the best target and if the target host is something other than
+        // previous best target, then we redploy and run the scripts against the
+        // new host.
+        let hackingServers = newHackingServers;
+        const targetHost = getBestHostToAttack(ns);
+        if (targetHost != previousTargetHost) {
+            LogMessage(ns, LOG_LEVEL.INFO, `Changing target host from ${previousTargetHost} to ${targetHost}`);
+            hackingServers = currentHackingServers;
+            previousTargetHost = targetHost;
+        }
+
+        for (const host of hackingServers) {
             if (host == ns.getHostname()) continue;
             await ns.scp(PAYLOADS.ALLINONEGO, host);
             await ns.scp(PAYLOADS.HACK, host);
