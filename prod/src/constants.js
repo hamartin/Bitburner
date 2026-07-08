@@ -41,4 +41,8 @@ export const RAM_TIERS = [
 ];
 
 // The amount to steal from a server for each batch were firing off.
-export const STEAL_PERCENTAGE = .1
+export const STEAL_PERCENTAGE = .1;
+
+// Used when setting up the delays for batching hacks towards a host.
+export const OFFSET_TIME = 100;
+export const BATCH_OFFSET_TIME = 500;

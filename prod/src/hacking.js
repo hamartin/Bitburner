@@ -19,6 +19,7 @@ export async function prepHost(ns, targetHost) {
     const weakenMem = ns.getScriptRam(PAYLOADS.WEAKEN);
 
     LogMessage(ns, LOG_LEVEL.INFO, `Starting to prepare host ${targetHost}.`);
+    LogMessage(ns, LOG_LEVEL.INFO, `This might take some time. You can see the progress doing > run ./utilities/monitor.js ${targetHost}`);
     while (true) {
         const freeMem = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
         // Checking if the host is at minimum security level, if not we weaken it.
@@ -28,7 +29,7 @@ export async function prepHost(ns, targetHost) {
                 ns.alert("Not enough memory to run the weaken script for prepping.");
                 ns.exit();
             }
-            const pid = ns.run(PAYLOADS.WEAKEN, threads, targetHost);
+            const pid = ns.run(PAYLOADS.WEAKEN, threads, targetHost, 0);
             while (ns.isRunning(pid, ns.getHostname())) {
                 await ns.sleep(200);
             }
@@ -39,7 +40,7 @@ export async function prepHost(ns, targetHost) {
                 ns.alert("Not enough memory to run the grow script for prepping.");
                 ns.exit();
             }
-            const pid = ns.run(PAYLOADS.GROW, threads, targetHost);
+            const pid = ns.run(PAYLOADS.GROW, threads, targetHost, 0);
             while (ns.isRunning(pid, ns.getHostname())) {
                 await ns.sleep(200);
             }
@@ -57,4 +58,22 @@ export async function prepHost(ns, targetHost) {
 
         await ns.sleep(200);
     }
+}
+
+/**
+ * This helper allows you to call one function and get the growth time. If
+ * Formulas are available, then it will use that instead of the default one.
+ * 
+ * @param {NS} ns       - Netscript context 
+ * @param {string} host - Hostname of the host we are calculating the growth time for
+ * @returns {number}
+ */
+export function getGrowTime(ns, host) {
+    if (ns.fileExists("Formulas.exe", "home")) {
+        const server = ns.getServer(host);
+        const player = ns.getPlayer();
+        return ns.formulas.hacking.growTime(server, player);
+    }
+
+    return ns.getGrowTime(host);
 }
