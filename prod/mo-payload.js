@@ -20,7 +20,6 @@ const LOG_LEVEL = Object.freeze({
  * @returns 
  */
 export async function main(ns) {
-    /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["maxMoneyMultiplier", .75],
         ["securityThresholdAdd", 5],

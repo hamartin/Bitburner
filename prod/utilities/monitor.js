@@ -14,7 +14,6 @@
 
 /** @param {NS} ns */
 export async function main(ns) {
-  /** @type {MyFlags} */
   const flags = /** @type {MyFlags} */ (ns.flags([
     ["help", false],
     ["sleepTime", 1000],

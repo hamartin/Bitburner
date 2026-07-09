@@ -15,7 +15,12 @@
  */ 
 
 /**
- * @typedef {{ fileName: String, hostName: String, contractType: String, help: Boolean }} MyFlags
+ * @typedef {{
+ *     fileName: String
+ *     hostName: String
+ *     contractType: String
+ *     help: Boolean
+ * }} MyFlags
  */
 
 /**
@@ -23,7 +28,6 @@
  * @returns
  */
 export async function main(ns) {
-  /** @type {MyFlags} */
   const flags = /** @type {MyFlags} */ (ns.flags([
     ["fileName", ""],
     ["hostName", ""],

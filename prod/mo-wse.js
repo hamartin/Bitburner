@@ -4,7 +4,6 @@ import { tradeStocks } from "./src/stocks.js";
 
 /** @param {NS} ns */
 export async function main(ns) {
-    /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["sleepTime", 10000],
     ]));

@@ -33,7 +33,6 @@ import {
 
 /** @param {NS} ns */
 export async function main(ns) {
-    /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["sleepTime", 1000],
         ["help", false],
