@@ -1,5 +1,5 @@
-import { CloudServers } from "./src/classes/cloudserver.js";
-import { Logger } from "./src/classes/logger.js";
+import { CloudServers } from "./src/classes/cloudserver";
+import { Logger } from "./src/classes/logger";
 
 
 /**

@@ -5,9 +5,7 @@
 // So I made this script to simply kill all active trades so that they just dont
 // spend a lot of time there and possibly cost us/me a lot of fake money.
 
-/**
- * @param {NS} ns 
- */
+/** @param {NS} ns */
 export async function main(ns) {
     const symbols = ns.stock.getSymbols();
 

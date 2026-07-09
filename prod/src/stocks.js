@@ -1,4 +1,4 @@
-import { Logger } from "./classes/logger.js";
+import { Logger } from "./classes/logger";
 
 import {
     COMMISSION_FEE,

@@ -1,4 +1,4 @@
-import { getNetworkHostNames } from "../utility.js";
+import { getNetworkHostNames } from "../utility";
 
 
 /**

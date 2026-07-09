@@ -1,4 +1,4 @@
-import { CRACKING_PROGRAMS } from "./constants.js";
+import { CRACKING_PROGRAMS } from "./constants";
 
 
 // This is needed so that Visual Code can resolve the Logger class

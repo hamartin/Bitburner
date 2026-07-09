@@ -1,4 +1,4 @@
-import { tradeStocks } from "./src/stocks.js";
+import { tradeStocks } from "./src/stocks";
 
 
 /** @typedef {{ sleepTime: number }} MyFlags */

@@ -1,11 +1,11 @@
-import { Logger } from "./src/classes/logger.js";
-import { MyPlayer } from "./src/classes/player.js";
-import { Payloads } from "./src/classes/payloads.js";
-import { Server } from "./src/classes/server.js";
+import { Logger } from "./src/classes/logger";
+import { MyPlayer } from "./src/classes/player";
+import { Payloads } from "./src/classes/payloads";
+import { Server } from "./src/classes/server";
 
 import {
     HACK_PERCENTAGE,
-}from "./src/constants.js";
+}from "./src/constants";
 
 
 /**

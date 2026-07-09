@@ -1,7 +1,7 @@
-import { CloudServers } from "./src/classes/cloudserver.js";
-import { Logger } from "./src/classes/logger.js";
-import { MyPlayer } from "./src/classes/player.js";
-import { Payloads } from "./src/classes/payloads.js";
+import { CloudServers } from "./src/classes/cloudserver";
+import { Logger } from "./src/classes/logger";
+import { MyPlayer } from "./src/classes/player";
+import { Payloads } from "./src/classes/payloads";
 
 import {
     getHackingServerHostNames,
