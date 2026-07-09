@@ -13,6 +13,11 @@ export async function main(ns) {
         ["help", false],
     ]));
 
+    // We prepare the logging.
+    ns.ui.openTail();
+    ns.disableLog('ALL');
+    ns.clearLog();
+
     const cloudServers = new CloudServers(ns);
     const logger = new Logger(ns);
 
@@ -21,11 +26,6 @@ export async function main(ns) {
         logger.write(logger.INFO, "\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
         return;
     }
-
-    // We prepare the logging.
-    ns.ui.openTail();
-    ns.disableLog('ALL');
-    ns.clearLog();
 
     while (true) {
         if (cloudServers.canBuyMoreServers()) {
