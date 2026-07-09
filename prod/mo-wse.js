@@ -1,5 +1,6 @@
 import { tradeStocks } from "./src/stocks.js";
 
+
 /** @typedef {{ sleepTime: number }} MyFlags */
 
 /** @param {NS} ns */

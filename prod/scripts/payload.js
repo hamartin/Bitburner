@@ -2,7 +2,7 @@
  * @typedef {{ 
  *  maxMoneyMultiplier: Number,
  *  securityThresholdAdd: Number,
- *  _: (String | Number | Boolean)[]
+ *  _: String[],
  *  help: Boolean,
  * }} MyFlags
  */
@@ -16,7 +16,8 @@ const LOG_LEVEL = Object.freeze({
 });
 
 /**
- * @param {NS} ns 
+ * @param {NS} ns            - Netscript context.
+ * @property {string[]} _[0] - Positional argument (same as ns.args[0]). The host name of the host to run the payload on.
  * @returns 
  */
 export async function main(ns) {

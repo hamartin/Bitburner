@@ -1,9 +1,6 @@
-import {
-    CLOUDSERVER_NAME_PREFIX,
-    LOG_LEVEL,
-    RAM_TIERS,
-} from "./src/constants.js";
-import { LogMessage } from "./src/logging.js";
+import { CloudServers } from "./src/classes/cloudserver.js";
+import { Logger } from "./src/classes/logger.js";
+
 
 /**
  * @typedef {{ sleepTime: Number, help: Boolean }} MyFlags
@@ -16,9 +13,13 @@ export async function main(ns) {
         ["help", false],
     ]));
 
+    const cloudServers = new CloudServers(ns);
+    const logger = new Logger(ns);
+
+
     if (flags.help) {
-        LogMessage(ns, LOG_LEVEL.INFO, `Usage: run ${ns.getScriptName()} --sleepTime <TIME>`);
-        LogMessage(ns, LOG_LEVEL.INFO, "\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
+        logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} --sleepTime <TIME>`);
+        logger.write(logger.INFO, "\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
         return;
     }
 
@@ -33,12 +34,12 @@ export async function main(ns) {
         // We have less than maxServer amount of cloud servers, let buy
         // som more.
         if (boughtServers.length < maxServers) {
-            for (const ramTier of RAM_TIERS) {
+            for (const ramTier of cloudServers.ramTiers) {
                 const cost = ns.cloud.getServerCost(ramTier);
                 if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
-                    const hostName = CLOUDSERVER_NAME_PREFIX + boughtServers.length;
+                    const hostName = cloudServers.namePrefix + boughtServers.length;
                     ns.cloud.purchaseServer(hostName, ramTier);
-                    LogMessage(ns, LOG_LEVEL.INFO, `Bought new server ${hostName} with ${ramTier}GB`);
+                    logger.write(logger.INFO, `Bought new server ${hostName} with ${ramTier}GB`);
                 }
                 break;
             } 
@@ -53,7 +54,7 @@ export async function main(ns) {
 
             // Checking if there is a next tier, and if not, we stop the while loop.
             const ramTier = ns.getServerMaxRam(smallest);
-            const nextRamTier = RAM_TIERS.find(r => r > ramTier);
+            const nextRamTier = cloudServers.ramTiers.find(r => r > ramTier);
 
             // If theres no next tier on the smallest cloud server,
             // then this script is done with its job.
@@ -66,10 +67,10 @@ export async function main(ns) {
             const cost = ns.cloud.getServerUpgradeCost(smallest, nextRamTier);
             if (ns.getServerMoneyAvailable(ns.getHostname()) > cost) {
                 ns.cloud.upgradeServer(smallest, nextRamTier);
-                LogMessage(ns, LOG_LEVEL.INFO, `Upgraded RAM on ${smallest} from ${ramTier}GB to ${nextRamTier}GB`);
+                logger.write(logger.INFO, `Upgraded RAM on ${smallest} from ${ramTier}GB to ${nextRamTier}GB`);
             }
         }
         await ns.sleep(flags.sleepTime);
     }
-    LogMessage(ns, LOG_LEVEL.INFO, "All purchased servers are maxed out. Exiting script.");
+    logger.write(logger.INFO, "All purchased servers are maxed out. Exiting script.");
 }

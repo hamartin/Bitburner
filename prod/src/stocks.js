@@ -1,10 +1,11 @@
+import { Logger } from "./classes/logger.js";
+
 import {
-    LOG_LEVEL,
     COMMISSION_FEE,
     DEF_CLOSE_LONG_THRESHOLD,
     DEF_OPEN_LONG_THRESHOLD,
 } from "./constants.js";
-import { LogMessage } from "./logging.js";
+
 
 /**
  * Trade stocks on World Stock Exchange.
@@ -16,6 +17,8 @@ import { LogMessage } from "./logging.js";
  * @param {number} [closeLongThreshold=DEF_CLOSE_LONG_THRESHOLD] - The forecast threshold to get past to close open longs
  */
 export function tradeStocks(ns, symbols, openLongThreshold = DEF_OPEN_LONG_THRESHOLD, closeLongThreshold = DEF_CLOSE_LONG_THRESHOLD) {
+    const logger = new Logger(ns);
+
     for (const symbol of symbols) {
         const forecast = ns.stock.getForecast(symbol);
         const price = ns.stock.getPrice(symbol);
@@ -33,16 +36,16 @@ export function tradeStocks(ns, symbols, openLongThreshold = DEF_OPEN_LONG_THRES
             const cost = availableShares * price;
             if (cost < availableCash) {
                 const avgOpenPrice = ns.stock.buyStock(symbol, availableShares);
-                LogMessage(ns, LOG_LEVEL.INFO, `Bought ${availableShares} shares for ${ns.format.number(avgOpenPrice, 2)} per share in ${symbol}`);
+                logger.write(logger.INFO, `Bought ${availableShares} shares for ${ns.format.number(avgOpenPrice, 2)} per share in ${symbol}`);
             }
         // The forecast tells us to sell our inventory for the stock.
         } else if (forecast <= closeLongThreshold && myShares > 0) {
             const avgClosePrice = ns.stock.sellStock(symbol, myShares);
             const profit = (avgClosePrice - avgMySharePrice) * myShares - COMMISSION_FEE;
             if (profit > 0) {
-                LogMessage(ns, LOG_LEVEL.SUCCESS, `Closed ${myShares} shares in ${symbol} with a profit of ${ns.format.number(profit, 2)}`);
+                logger.write(logger.SUCCESS, `Closed ${myShares} shares in ${symbol} with a profit of ${ns.format.number(profit, 2)}`);
             } else {
-                LogMessage(ns, LOG_LEVEL.WARN, `Closed ${myShares} shares in ${symbol} with a loss of ${ns.format.number(profit, 2)}`);
+                logger.write(logger.WARN, `Closed ${myShares} shares in ${symbol} with a loss of ${ns.format.number(profit, 2)}`);
             }
         }
     }

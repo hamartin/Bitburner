@@ -1,9 +1,15 @@
-import {
-    CLOUDSERVER_NAME_PREFIX,
-    CRACKING_PROGRAMS,
-    LOG_LEVEL,
-} from "./constants.js";
-import { LogMessage } from "./logging.js";
+import { CRACKING_PROGRAMS } from "./constants.js";
+
+
+// This is needed so that Visual Code can resolve the Logger class
+/**
+ * @typedef {import("../src/classes/logger.js").Logger} Logger
+ */
+
+// This is needed so that Visual Code can resolve the MyPlayer class
+/**
+ * @typedef {import("../src/classes/player.js").MyPlayer} MyPlayer
+ */
 
 /**
  * Executes a script on a server
@@ -23,63 +29,6 @@ export function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileNam
         const threads = Math.floor(maxRam / virusRamUsage);
         ns.exec(virusFileName, hostName, threads, targetHost);
     }
-}
-
-/**
- * Returns the host which is deemed best to attack at the current point in time.
- * The function does this: score = (maxMoney * growth) / hackTime
- * The higher the score, the better the host is.
- * 
- * The function does not use minSecurity directly as that is handled by hackAnalyze.
- * Weaken time is always the time it takes to hack the server times 4. Since the ratio
- * does not change between servers, we don't need to consider it.
- * 
- * The function also takes your hacking level into account through the analyze function.
- * So if you're much lower hack level than the target host, then your score for that host
- * will automatically be lower.
- * 
- * @param {NS} ns    - Netscript context
- * @returns {string} - The hostname of the host which is "best" to attack
- */
-export function getBestHostToAttack(ns) {
-    const hostNames = getNetworkHostNames(ns);
-    const rootedHosts = hostNames.filter(s => ns.hasRootAccess(s));
-
-    let best = null;
-    let bestScore = -Infinity;
-    for (const hostName of rootedHosts) {
-        const maxMoney = ns.getServerMaxMoney(hostName);
-        if (maxMoney <= 0) continue;
-
-        const hackPercent = ns.hackAnalyze(hostName);
-        const hackTime = ns.getHackTime(hostName);
-        const growth = ns.getGrowTime(hostName);
-        const score = (maxMoney * hackPercent * growth) / hackTime;
-
-        if (score > bestScore) {
-            bestScore = score;
-            best = hostName;
-        }
-    }
-    return best ?? "n00dles";
-}
-
-/**
- * This bit of the code handles getting all the bought servers
- * which does not show in the normal scans.
- * 
- * @param {NS} ns      - Netscript context
- * @returns {String[]} - List of cloudserver names we have bought
- */
-export function getCloudServerHostNames(ns) {
-    const hostNames = [];
-
-    let i = 0;
-    while (ns.serverExists(CLOUDSERVER_NAME_PREFIX + i)) {
-        hostNames.push(CLOUDSERVER_NAME_PREFIX + i);
-        i++;
-    }
-    return hostNames;
 }
 
 /**
@@ -179,9 +128,10 @@ export function getNumberOfCrackingPrograms(ns) {
  * available and nukes it to finish things of
  * 
  * @param {NS} ns          - Netscript context
+ * @param {Logger} logger  - The logging context
  * @param {string[]} hosts - List of hostnames to hack and nuke
  */
-export function hackHosts(ns, hosts) {
+export function hackHosts(ns, logger, hosts) {
     for (const host of hosts) {
         for (const programName of CRACKING_PROGRAMS) {
             if (!ns.fileExists(programName, "home")) {
@@ -204,10 +154,10 @@ export function hackHosts(ns, hosts) {
                     ns.sqlinject(host);
                     break;
             }
-            LogMessage(ns, LOG_LEVEL.SUCCESS, `Executed ${programName} on ${host}`);
+            logger.write(logger.SUCCESS, `Executed ${programName} on ${host}`);
         }
         ns.nuke(host);
-        LogMessage(ns, LOG_LEVEL.SUCCESS, `Nuked ${host}`);
+        logger.write(logger.SUCCESS, `Nuked ${host}`);
     }
 }
 
@@ -216,12 +166,51 @@ export function hackHosts(ns, hosts) {
  * the "virus" which will attack the target host
  * 
  * @param {NS} ns             - Netscript context
+ * @param {Logger} ns         - The logging context
  * @param {string} host       - Hostname of the host to run the virus on
  * @param {string} targetHost - Hostname of the host to attack
  * @param {string} fileName   - Filename of the virus to attack with
  */
-export function killAllProcessesAndRunScript(ns, host, targetHost, fileName) {
+export function killAllProcessesAndRunScript(ns, logger, host, targetHost, fileName) {
     ns.killall(host);
     executeScriptOnRemoteHost(ns, host, targetHost, fileName, true);
-    ns.print(LOG_LEVEL.INFO + `Killed all processes and started script ${fileName} on host ${host}.`);
+    logger.write(logger.INFO, `Killed all processes and started script ${fileName} on host ${host}.`);
+}
+
+/**
+ * Function returns the delays needed on each of the 3 last steps to get the
+ * staggering we need to hack fast.
+ * 
+ * This is what we are trying to achieve with the delays we are writing here.
+ * |------||----| hack
+ * |-------------| weaken
+ * |---||---------| grow
+ * |||-------------| weaken
+ * 
+ * @param {NS} ns             - Netscript context
+ * @param {string} targetHost - The host name of the host to target our attack on
+ * @param {MyPlayer} player     - You, data about you, the player
+ * @example getDelay(ns, "omega-net", player);
+ * @returns {DelayTimes}
+ */
+export function getDelay(ns, targetHost, player) {
+    const OFFSET_TIME = 100;
+    const attackTimes = player.getAttackTimes(targetHost);
+
+    const totalHackTime = attackTimes.weaken - OFFSET_TIME;
+    const totalHackWeakenTime = attackTimes.weaken;
+    const totalGrowTime = attackTimes.weaken + OFFSET_TIME;
+    const totalGrowWeakenTime = totalGrowTime + OFFSET_TIME;
+
+    const hackDelay = totalHackTime - attackTimes.hack;
+    const weakenHackDelay = totalHackWeakenTime - attackTimes.weaken;
+    const growDelay = totalGrowTime - attackTimes.grow;
+    const weakenGrowDelay = totalGrowWeakenTime - attackTimes.weaken;
+
+    return {
+        hack: hackDelay,
+        weakenHack: weakenHackDelay,
+        grow: growDelay,
+        weakenGrow: weakenGrowDelay,
+    };
 }

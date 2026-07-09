@@ -1,8 +1,6 @@
-import {
-    LOG_LEVEL,
-    PAYLOADS,
- } from "./constants.js";
-import { LogMessage } from "./logging.js";
+import { Logger } from "./classes/logger.js";
+import { Payloads } from "./classes/payloads.js";
+
 
 /**
  * Prepares the host before putting batches on it. The function simply
@@ -15,11 +13,14 @@ import { LogMessage } from "./logging.js";
  * @param {string} targetHost - The host name to prepare
  */
 export async function prepHost(ns, targetHost) {
-    const growMem = ns.getScriptRam(PAYLOADS.GROW);
-    const weakenMem = ns.getScriptRam(PAYLOADS.WEAKEN);
+    const payloads = new Payloads(ns);
+    const logger = new Logger(ns);
 
-    LogMessage(ns, LOG_LEVEL.INFO, `Starting to prepare host ${targetHost}.`);
-    LogMessage(ns, LOG_LEVEL.INFO, `This might take some time. You can see the progress doing > run ./utilities/monitor.js ${targetHost}`);
+    const growMem = payloads.getRamRequirements(payloads.growFileNameFull);
+    const weakenMem = payloads.getRamRequirements(payloads.weakenFileNameFull);
+
+    logger.write(logger.INFO, `Starting to prepare host ${targetHost}.`);
+    logger.write(logger.INFO, `This might take some time. You can see the progress doing > run ./utilities/monitor.js ${targetHost}`);
     while (true) {
         const freeMem = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
         // Checking if the host is at minimum security level, if not we weaken it.
@@ -29,7 +30,7 @@ export async function prepHost(ns, targetHost) {
                 ns.alert("Not enough memory to run the weaken script for prepping.");
                 ns.exit();
             }
-            const pid = ns.run(PAYLOADS.WEAKEN, threads, targetHost, 0);
+            const pid = ns.run(payloads.weakenFileNameFull, threads, targetHost, 0);
             while (ns.isRunning(pid, ns.getHostname())) {
                 await ns.sleep(200);
             }
@@ -40,7 +41,7 @@ export async function prepHost(ns, targetHost) {
                 ns.alert("Not enough memory to run the grow script for prepping.");
                 ns.exit();
             }
-            const pid = ns.run(PAYLOADS.GROW, threads, targetHost, 0);
+            const pid = ns.run(payloads.growFileNameFull, threads, targetHost, 0);
             while (ns.isRunning(pid, ns.getHostname())) {
                 await ns.sleep(200);
             }
@@ -52,7 +53,7 @@ export async function prepHost(ns, targetHost) {
         if (ns.getServerSecurityLevel(targetHost) <= ns.getServerMinSecurityLevel(targetHost) 
             && ns.getServerMoneyAvailable(targetHost) >= ns.getServerMaxMoney(targetHost)
         ) {
-            LogMessage(ns, LOG_LEVEL.INFO, `Finished preparing host ${targetHost}.`);
+            logger.write(logger.INFO, `Finished preparing host ${targetHost}.`);
             break;
         }
 

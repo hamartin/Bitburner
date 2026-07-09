@@ -2,8 +2,8 @@
  * To run the hack script an un-named argument with the host name of the host
  * you want to attack must be given.
  * 
- * @param {NS} ns                 - Netscript context
- * @property {string} ns.args[0]  - Required host name to hack
+ * @param {NS} ns                - Netscript context
+ * @property {string} ns.args[0] - Required host name to hack
  * @property {number} ns.args[1] - Required delay time for the script
  * @example ns.run(<PATH TO SCRIPT>, <NUMBER OF THREADS>, <TARGET HOST>);
  * @example run <PATH TO SCRIPT> <TARGET HOST> -t <NUMBER OF THREADS>

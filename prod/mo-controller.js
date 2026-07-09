@@ -1,11 +1,9 @@
+import { CloudServers } from "./src/classes/cloudserver.js";
+import { Logger } from "./src/classes/logger.js";
+import { MyPlayer } from "./src/classes/player.js";
+import { Payloads } from "./src/classes/payloads.js";
+
 import {
-    LOG_LEVEL,
-    PAYLOADS,
-} from "./src/constants.js";
-import { LogMessage } from "./src/logging.js";
-import {
-    getBestHostToAttack,
-    getCloudServerHostNames,
     getHackingServerHostNames,
     getHostsThatCanBeHacked,
     getNetworkHostsDetails,
@@ -13,6 +11,7 @@ import {
     hackHosts,
     killAllProcessesAndRunScript,
 } from "./src/utility.js";
+
 
 /**
  * @typedef {{
@@ -24,33 +23,24 @@ import {
  */
 
 /**
- * @typedef {Set<String>} ServerSet
+ * @param {NS} ns
  */
-
-/**
- * @typedef {Map<String, Number>} ServerRamMap
- */
-
-/** @param {NS} ns */
 export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["sleepTime", 1000],
         ["help", false],
     ]));
 
-    if (flags.help) {
-        ns.tprint(LOG_LEVEL.ERROR + `Usage: run ${ns.getScriptName()} --sleepTime <TIME> --help`);
-        ns.tprint(LOG_LEVEL.ERROR + "\t--sleepTime -> Optional and defaults to 1000 equalling 1 seoncd.");
-        ns.tprint(LOG_LEVEL.ERROR + "\t--help -> Optional and shows this help screen.");
-        return;
-    }
+    const player = new MyPlayer(ns);
+    const payloads = new Payloads(ns);
+    const logger = new Logger(ns);
+    const cloudServers = new CloudServers(ns);
 
-    // All the payloads are a requirement. If one or more don't exist, print a message and quit.
-    for (const script of Object.values(PAYLOADS)) {
-        if (!ns.fileExists(script, ns.getHostname())) {
-            ns.tprint(LOG_LEVEL.ERROR + `No file found with the name ${script}.`);
-            return;
-        }
+    if (flags.help) {
+        ns.tprint(logger.ERROR + ` Usage: run ${ns.getScriptName()} --sleepTime <TIME> --help`);
+        ns.tprint(logger.ERROR + "\t--sleepTime -> Optional and defaults to 1000 equalling 1 seoncd.");
+        ns.tprint(logger.ERROR + "\t--help -> Optional and shows this help screen.");
+        return;
     }
 
     // We prepare the logging.
@@ -76,7 +66,7 @@ export async function main(ns) {
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
         const hostsThatCanBeHacked = getHostsThatCanBeHacked(ns, hostsDetails);
         const hostsNotHacked = hostsThatCanBeHacked.filter(host => !ns.hasRootAccess(host));
-        if (hostsNotHacked.length > 0) hackHosts(ns, hostsNotHacked);
+        if (hostsNotHacked.length > 0) hackHosts(ns, logger, hostsNotHacked);
 
         // We find all the servers we can use to hack other servers with and
         // compare it to known servers. We extract new unknown servers and work
@@ -90,38 +80,38 @@ export async function main(ns) {
         // previous best target, then we redploy and run the scripts against the
         // new host.
         let hackingServers = newHackingServers;
-        const targetHost = getBestHostToAttack(ns);
+        const targetHost = player.getBestHostToAttack();
         if (targetHost != previousTargetHost) {
-            LogMessage(ns, LOG_LEVEL.INFO, `Changing target host from ${previousTargetHost} to ${targetHost}`);
+            logger.write(logger.INFO, `Changing target host from ${previousTargetHost} to ${targetHost}`);
             hackingServers = currentHackingServers;
             previousTargetHost = targetHost;
         }
 
         for (const host of hackingServers) {
             if (host == ns.getHostname()) continue;
-            await ns.scp(PAYLOADS.ALLINONEGO, host);
-            await ns.scp(PAYLOADS.HACK, host);
-            await ns.scp(PAYLOADS.GROW, host);
-            await ns.scp(PAYLOADS.WEAKEN, host);
-            ns.print(LOG_LEVEL.INFO + `Copied all payload files to ${targetHost}.`);
-            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
+            await ns.scp(payloads.allFileNameFull, host);
+            await ns.scp(payloads.hackFileNameFull, host);
+            await ns.scp(payloads.growFileNameFull, host);
+            await ns.scp(payloads.weakenFileNameFull, host);
+            ns.print(logger.INFO + `Copied all payload files to ${targetHost}.`);
+            killAllProcessesAndRunScript(ns, logger, host, targetHost, payloads.allFileNameFull);
         }
 
         // This part is identical to the hacking servers part above with the
         // exception of tracking the cloud servers RAM so that we can kill and
         // rerun scripts using all the host RAM.
-        const currentCloudServers = getCloudServerHostNames(ns);
+        const currentCloudServers = cloudServers.getServerHostNames();
         const newCloudServers = currentCloudServers.filter(host => !knownCloudServers.has(host));
         knownCloudServers.clear();
         for (const host of currentCloudServers) knownCloudServers.add(host);
 
         for (const host of newCloudServers) {
-            await ns.scp(PAYLOADS.ALLINONEGO, host);
-            await ns.scp(PAYLOADS.HACK, host);
-            await ns.scp(PAYLOADS.GROW, host);
-            await ns.scp(PAYLOADS.WEAKEN, host);
-            ns.print(LOG_LEVEL.INFO + `Copied all payload files to ${targetHost}.`);
-            killAllProcessesAndRunScript(ns, host, targetHost, PAYLOADS.ALLINONEGO);
+            await ns.scp(payloads.allFileNameFull, host);
+            await ns.scp(payloads.hackFileNameFull, host);
+            await ns.scp(payloads.growFileNameFull, host);
+            await ns.scp(payloads.weakenFileNameFull, host);
+            logger.write(logger.INFO, `Copied all payload files to ${targetHost}.`);
+            killAllProcessesAndRunScript(ns, logger, host, targetHost, payloads.allFileNameFull);
 
             // New cloud server. We need to get the RAM size and store it to the
             // map for later use and comparison.
@@ -134,8 +124,8 @@ export async function main(ns) {
 
             if (previousRam === undefined || previousRam !== currentRam) {
                 knownCloudServersRam.set(currentCloudServer, currentRam);
-                ns.print(LOG_LEVEL.INFO + `Cloudserver ${currentCloudServer} has increased its RAM. Restarting all scripts.`);
-                killAllProcessesAndRunScript(ns, currentCloudServer, targetHost, PAYLOADS.ALLINONEGO);
+                logger.write(logger.INFO, `Cloudserver ${currentCloudServer} has increased its RAM. Restarting all scripts.`);
+                killAllProcessesAndRunScript(ns, logger, currentCloudServer, targetHost, payloads.allFileNameFull);
             }
         }
         await ns.sleep(flags.sleepTime);
