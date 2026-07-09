@@ -1,4 +1,4 @@
-import { StockTrader } from "./src/classes/stocks";
+import { StockTrader } from "./src/stocks";
 
 /** @typedef {{ sleepTime: number }} MyFlags */
 

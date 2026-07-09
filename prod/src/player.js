@@ -1,4 +1,4 @@
-import { getNetworkHostNames } from "../utility";
+import { getNetworkHostNames } from "./utility";
 
 
 /**

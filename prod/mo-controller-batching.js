@@ -1,7 +1,7 @@
-import { Logger } from "./src/classes/logger";
-import { MyPlayer } from "./src/classes/player";
-import { Payloads } from "./src/classes/payloads";
-import { Server } from "./src/classes/server";
+import { Logger } from "./src/logger";
+import { MyPlayer } from "./src/player";
+import { Payloads } from "./src/payloads";
+import { Server } from "./src/server";
 
 import {
     HACK_PERCENTAGE,

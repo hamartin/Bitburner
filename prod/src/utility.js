@@ -3,12 +3,12 @@ import { CRACKING_PROGRAMS } from "./constants";
 
 // This is needed so that Visual Code can resolve the Logger class
 /**
- * @typedef {import("../src/classes/logger.js").Logger} Logger
+ * @typedef {import("../src/logger.js").Logger} Logger
  */
 
 // This is needed so that Visual Code can resolve the MyPlayer class
 /**
- * @typedef {import("../src/classes/player.js").MyPlayer} MyPlayer
+ * @typedef {import("../src/player.js").MyPlayer} MyPlayer
  */
 
 /**

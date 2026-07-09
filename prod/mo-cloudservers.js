@@ -1,5 +1,5 @@
-import { CloudServers } from "./src/classes/cloudserver";
-import { Logger } from "./src/classes/logger";
+import { CloudServers } from "./src/cloudserver";
+import { Logger } from "./src/logger";
 
 
 /**
@@ -15,7 +15,6 @@ export async function main(ns) {
 
     const cloudServers = new CloudServers(ns);
     const logger = new Logger(ns);
-
 
     if (flags.help) {
         logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} --sleepTime <TIME>`);

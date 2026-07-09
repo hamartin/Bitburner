@@ -1,6 +1,7 @@
-import { MyPlayer } from "../src/classes/player";
-import { Payloads } from "../src/classes/payloads";
-import { Server } from "../src/classes/server";
+import { Logger } from "../src/logger";
+import { MyPlayer } from "../src/player";
+import { Payloads } from "../src/payloads";
+import { Server } from "../src/server";
 
 import { HACK_PERCENTAGE } from "../src/constants";
 
@@ -13,9 +14,10 @@ export async function main(ns) {
 
     const player = new MyPlayer(ns);
     const payloads = new Payloads(ns);
+    const logger = new Logger(ns);
 
     // Find the best host to attack
-    const server = new Server(ns, player.getBestHostToAttack(), payloads);
+    const server = new Server(ns, player.getBestHostToAttack(), payloads, logger);
     const threads = server.getHackThreads(HACK_PERCENTAGE);
 
     const hackRequiredRam = payloads.getRamRequirements(payloads.hackFileNameFull, threads.hack);
