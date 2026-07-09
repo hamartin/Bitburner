@@ -1,8 +1,3 @@
-// Used by the stock trading scripts.
-export const COMMISSION_FEE = 100000;
-export const DEF_OPEN_LONG_THRESHOLD = .55;
-export const DEF_CLOSE_LONG_THRESHOLD = .50;
-
 // Used for cracking servers and checking what we can crack etc.
 export const CRACKING_PROGRAMS = [
     "BruteSSH.exe",

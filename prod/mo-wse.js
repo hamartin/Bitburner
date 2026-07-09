@@ -1,5 +1,4 @@
-import { tradeStocks } from "./src/stocks";
-
+import { StockTrader } from "./src/classes/stocks";
 
 /** @typedef {{ sleepTime: number }} MyFlags */
 
@@ -14,9 +13,9 @@ export async function main(ns) {
     ns.disableLog("ALL");
     ns.clearLog();
 
-    const symbols = ns.stock.getSymbols();
+    const trader = new StockTrader(ns);
     while (true) {
-        tradeStocks(ns, symbols);
+        trader.trade();
         await ns.sleep(flags.sleepTime);
     }
 }
