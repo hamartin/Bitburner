@@ -1,4 +1,3 @@
-import { getGrowTime } from "../hacking.js";
 import { getNetworkHostNames } from "../utility.js";
 
 
@@ -17,15 +16,35 @@ export class MyPlayer {
     }
 
     /**
+     * This helper allows you to call one function and get the growth time. If
+     * Formulas are available, then it will use that instead of the default one.
+     * 
+     * @param {string} hostName - The host name of the host you want to calculate growth time for.
+     * @returns {number}
+     */
+    #getGrowTime(hostName) {
+        if (this.ns.fileExists("Formulas.exe", "home")) {
+            const server = this.ns.getServer(hostName);
+            const player = this.ns.getPlayer();
+            return this.ns.formulas.hacking.growTime(server, player);
+        }
+
+        return this.ns.getGrowTime(hostName);
+    }
+
+    /**
      * Returns an object with the different base times for the different
      * stages/types of attacks.
+     * 
+     * If Formulas has been activated, it uses the formula recipe instead of the
+     * standard ns.getGrowTime().
      * 
      * @param {string} targetHost - The host name of the host to get times for.
      * @returns {AttackTimes}     - An object containing attack base times.
      */
     getAttackTimes(targetHost) {
         const hackTime = this.ns.getHackTime(targetHost);
-        const growTime = getGrowTime(this.ns, targetHost);
+        const growTime = this.#getGrowTime(targetHost);
         const weakenTime = this.ns.getWeakenTime(targetHost);
 
         return {hack: hackTime, grow: growTime, weaken: weakenTime};
