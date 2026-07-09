@@ -1,0 +1,76 @@
+import { getGrowTime } from "../hacking.js";
+import { getNetworkHostNames } from "../utility.js";
+
+
+/**
+ * A class to help with player relevant things.
+ * 
+ * @example const player = new MyPlayer(ns);
+ */
+export class MyPlayer {
+    /**
+     * @param {NS} ns - Netscript context
+     * @example const player = new MyPlayer(ns);
+     */
+    constructor (ns) {
+        this.ns = ns;
+    }
+
+    /**
+     * Returns an object with the different base times for the different
+     * stages/types of attacks.
+     * 
+     * @param {string} targetHost - The host name of the host to get times for.
+     * @returns {AttackTimes}     - An object containing attack base times.
+     */
+    getAttackTimes(targetHost) {
+        const hackTime = this.ns.getHackTime(targetHost);
+        const growTime = getGrowTime(this.ns, targetHost);
+        const weakenTime = this.ns.getWeakenTime(targetHost);
+
+        return {hack: hackTime, grow: growTime, weaken: weakenTime};
+    }
+
+    /**
+     * Returns the host which is deemed best to attack at the current point in time.
+     * The function does this: score = (maxMoney * growth) / hackTime
+     * The higher the score, the better the host is.
+     * 
+     * The function does not use minSecurity directly as that is handled by hackAnalyze.
+     * Weaken time is always the time it takes to hack the server times 4. Since the ratio
+     * does not change between servers, we don't need to consider it.
+     * 
+     * The function also takes your hacking level into account through the analyze function.
+     * So if you're much lower hack level than the target host, then your score for that host
+     * will automatically be lower.
+     * 
+     * @returns {string} - The hostname of the host which is "best" to attack
+     */
+    getBestHostToAttack() {
+        const hostNames = getNetworkHostNames(this.ns);
+        const rootedHosts = hostNames.filter(s => this.ns.hasRootAccess(s));
+
+        let best = null;
+        let bestScore = -Infinity;
+        for (const hostName of rootedHosts) {
+            const maxMoney = this.ns.getServerMaxMoney(hostName);
+            if (maxMoney <= 0) continue;
+            const requiredHackingSkill = this.ns.getServerRequiredHackingLevel(hostName);
+            // We divide by 3 because when your hacking level is 3 times bigger
+            // than the target host required hacking level, then probability of
+            // success in all 4 batching stages gets a lot higher.
+            if (this.ns.getHackingLevel() < requiredHackingSkill/3) continue;
+
+            const hackPercent = this.ns.hackAnalyze(hostName);
+            const hackTime = this.ns.getHackTime(hostName);
+            const growth = this.ns.getGrowTime(hostName);
+            const score = (maxMoney * hackPercent * growth) / hackTime;
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = hostName;
+            }
+        }
+        return best ?? "n00dles";
+    }
+}

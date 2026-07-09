@@ -1,7 +1,3 @@
-/**
- * @typedef {{ host: String, parent: TreeNode | null, children: TreeNode[] }} TreeNode
- */
-
 //
 // This whole file is created by Copilot in pure vibecoding. I originally had a
 // script which just printed the path to all hosts where a backdoor was not
