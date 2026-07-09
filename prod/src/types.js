@@ -41,3 +41,11 @@
  * @property {TreeNode | null} parent
  * @property {TreeNode[]} children
  */
+
+/**
+ * @typedef ServerStats
+ * @property {number} currentMoney
+ * @property {number} maxMoney
+ * @property {number} currentSecurity
+ * @property {number} minSecurity
+ */

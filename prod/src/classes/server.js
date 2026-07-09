@@ -84,6 +84,19 @@ export class Server {
     }
 
     /**
+     * Returns generic information about the host.
+     * 
+     * @return {ServerStats}
+     */
+    getCurrentInfo() {
+        const money = this.ns.getServerMoneyAvailable(this.hostName) === 0 ? 1 : this.ns.getServerMoneyAvailable(this.hostName);
+        const maxMoney = this.ns.getServerMaxMoney(this.hostName);
+        const minSec = this.ns.getServerMinSecurityLevel(this.hostName);
+        const sec = this.ns.getServerSecurityLevel(this.hostName);
+        return {currentMoney: money, maxMoney: maxMoney, currentSecurity: sec, minSecurity: minSec};
+    }
+
+    /**
      * Prepares the host before putting batches on it. The function simply
      * maximizes money and minimizes the security on the host.
      * 
