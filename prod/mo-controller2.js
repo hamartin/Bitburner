@@ -3,7 +3,6 @@ import { MyPlayer } from "./src/classes/player.js";
 import { Payloads } from "./src/classes/payloads.js";
 import { Server } from "./src/classes/server.js";
 
-import { prepHost } from "./src/hacking.js";
 import {
     HACK_PERCENTAGE,
 }from "./src/constants.js";
@@ -37,23 +36,23 @@ export async function main(ns) {
 
     const BATCH_OFFSET_TIME = 500;
 
-    const attackingHost = new Server(ns, ns.getHostname(), payloads);
+    const attackingHost = new Server(ns, ns.getHostname(), payloads, logger);
     let targetHost;
     if (fixedHost === "undefined") {
-        targetHost = new Server(ns, player.getBestHostToAttack(), payloads);
+        targetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
     } else {
-        targetHost = new Server(ns, fixedHost, payloads);
+        targetHost = new Server(ns, fixedHost, payloads, logger);
     }
-    await prepHost(ns, targetHost.hostName);
+    await targetHost.prepHost();
 
     while (true) {
         if (fixedHost === "undefined") {
-            const newTargetHost = new Server(ns, player.getBestHostToAttack(), payloads);
+            const newTargetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
             if (newTargetHost.hostName != targetHost.hostName) {
                 targetHost = newTargetHost;
                 logger.write(logger.INFO, `New optimal host to attack found ${targetHost}.`);
                 // Prepare the host, so we can get the required information to enable us to do batching.
-                await prepHost(ns, targetHost.hostName);
+                await targetHost.prepHost();
             }
         }
 

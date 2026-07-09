@@ -1,5 +1,10 @@
+// This is needed so that Visual Code can see Payloads ad Logger
 /**
  * @typedef {import("./payloads.js").Payloads} Payloads - This is needed so that Visual Code can resolve the Payloads class
+ */
+
+/**
+ * @typedef {import("./logger.js").Logger} Logger - This is needed so that Visual Code can resolve the Payloads class
  */
 
 
@@ -13,12 +18,14 @@ export class Server {
      * @param {NS} ns             - Netscript context
      * @param {string} hostName   - The server host name
      * @param {Payloads} payloads - The Payloads context
+     * @param {Logger} logger     - The Logger context
      * @example const server = new Server(ns, "n00dles", payloads);
      */
-    constructor (ns, hostName, payloads) {
+    constructor (ns, hostName, payloads, logger) {
         this.ns = ns;
         this.hostName = hostName;
         this.payloads = payloads;
+        this.logger = logger;
     }
 
     /**
@@ -74,5 +81,60 @@ export class Server {
      */
     getNumbRunningProcesses() {
         return this.ns.ps(this.hostName).length
+    }
+
+    /**
+     * Prepares the host before putting batches on it. The function simply
+     * maximizes money and minimizes the security on the host.
+     * 
+     * If there is not enough RAM to execute the prepping, then the script
+     * quits and an alert will be shown on screen.
+     * 
+     * @example server.prepHost();
+     */
+    async prepHost() {
+        const growMem = this.payloads.getRamRequirements(this.payloads.growFileNameFull);
+        const weakenMem = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull);
+
+        this.logger.write(this.logger.INFO, `Starting to prepare host ${this.hostName}.`);
+        this.logger.write(this.logger.INFO, `This might take some time. You can see the progress doing > run ./utilities/monitor.js ${this.hostName}`);
+        while (true) {
+            const freeMem = this.ns.getServerMaxRam(this.ns.getHostname()) - this.ns.getServerUsedRam(this.ns.getHostname());
+            // Checking if the host is at minimum security level, if not we weaken it.
+            if (this.ns.getServerSecurityLevel(this.hostName) > this.ns.getServerMinSecurityLevel(this.hostName)) {
+                const threads = Math.floor(freeMem / weakenMem);
+                if (threads <= 0) {
+                    this.ns.alert("Not enough memory to run the weaken script for prepping.");
+                    this.ns.exit();
+                }
+                const pid = this.ns.run(this.payloads.weakenFileNameFull, threads, this.hostName, 0);
+                while (this.ns.isRunning(pid, this.ns.getHostname())) {
+                    await this.ns.sleep(200);
+                }
+            // Checking if the host has the most amount of money it can have, if not we grow it.
+            } else if (this.ns.getServerMoneyAvailable(this.hostName) < this.ns.getServerMaxMoney(this.hostName)) {
+                const threads = Math.floor(freeMem / growMem);
+                if (threads <= 0) {
+                    this.ns.alert("Not enough memory to run the grow script for prepping.");
+                    this.ns.exit();
+                }
+                const pid = this.ns.run(this.payloads.growFileNameFull, threads, this.hostName, 0);
+                while (this.ns.isRunning(pid, this.ns.getHostname())) {
+                    await this.ns.sleep(200);
+                }
+            }
+
+            // Checking if host has the least amount of security it can have, and
+            // that it has the most amount of money it can have. If both is true, we
+            // break out of the loop and return.
+            if (this.ns.getServerSecurityLevel(this.hostName) <= this.ns.getServerMinSecurityLevel(this.hostName) 
+                && this.ns.getServerMoneyAvailable(this.hostName) >= this.ns.getServerMaxMoney(this.hostName)
+            ) {
+                this.logger.write(this.logger.INFO, `Finished preparing host ${this.hostName}.`);
+                break;
+            }
+
+            await this.ns.sleep(200);
+        }
     }
 }
