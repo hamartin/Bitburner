@@ -73,4 +73,40 @@ export class MyPlayer {
         }
         return best ?? "n00dles";
     }
+
+    /**
+     * Function returns the delays needed on each of the 3 last steps to get the
+     * staggering we need to hack fast.
+     * 
+     * This is what we are trying to achieve with the delays we are writing here.
+     * |------||----| hack
+     * |-------------| weaken
+     * |---||---------| grow
+     * |||-------------| weaken
+     * 
+     * @param {string} targetHost - The host name of the host to target our attack on
+     * @example const delays = player.getDelay("omega-net");
+     * @returns {DelayTimes}
+     */
+    getDelay(targetHost) {
+        const OFFSET_TIME = 100;
+        const attackTimes = this.getAttackTimes(targetHost);
+
+        const totalHackTime = attackTimes.weaken - OFFSET_TIME;
+        const totalHackWeakenTime = attackTimes.weaken;
+        const totalGrowTime = attackTimes.weaken + OFFSET_TIME;
+        const totalGrowWeakenTime = totalGrowTime + OFFSET_TIME;
+
+        const hackDelay = totalHackTime - attackTimes.hack;
+        const weakenHackDelay = totalHackWeakenTime - attackTimes.weaken;
+        const growDelay = totalGrowTime - attackTimes.grow;
+        const weakenGrowDelay = totalGrowWeakenTime - attackTimes.weaken;
+
+        return {
+            hack: hackDelay,
+            weakenHack: weakenHackDelay,
+            grow: growDelay,
+            weakenGrow: weakenGrowDelay,
+        };
+    }
 }

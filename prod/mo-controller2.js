@@ -5,9 +5,6 @@ import { Server } from "./src/classes/server.js";
 
 import { prepHost } from "./src/hacking.js";
 import {
-    getDelay,
-} from "./src/utility.js";
-import {
     HACK_PERCENTAGE,
 }from "./src/constants.js";
 
@@ -62,7 +59,7 @@ export async function main(ns) {
 
         const threads = targetHost.getHackThreads(HACK_PERCENTAGE);
         if (attackingHost.getAvailableRam() > threads.totalRequiredRam) {
-            const delays = getDelay(ns, targetHost.hostName, player);
+            const delays = player.getDelay(targetHost.hostName);
 
             const hackPid = ns.run(payloads.hackFileNameFull, threads.hack, targetHost.hostName, delays.hack);
             const hackWeakenPid = ns.run(payloads.weakenFileNameFull, threads.weakenHack, targetHost.hostName, delays.weakenHack);
