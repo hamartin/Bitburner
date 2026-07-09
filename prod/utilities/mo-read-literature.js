@@ -1,25 +1,24 @@
 /**
  * @typedef {{
- *  _: (String | Number | Boolean)[],
+ *  _: String[],
  *  help: Boolean,
  * }} MyFlags
  */
 
 /**
- * @param {NS} ns
+ * @param {NS} ns - Netscript context.
  * @returns
  */
 export async function main(ns) {
-    /** @type {MyFlags} */
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["help", false],
     ]));
-    const fileName = String(flags._[0]);
 
-    if (fileName == "undefined" || flags.help) {
+    if (flags._.length === 0 || flags.help) {
         ns.tprint(`Usage: run ${ns.getScriptName()} <.lit FILENAME> --help <BOOLEAN>`); 
         return;
     }
+    const fileName = String(flags._[0]);
 
     // We prepare the logging.
     ns.ui.openTail();

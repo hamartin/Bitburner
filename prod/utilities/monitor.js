@@ -8,7 +8,7 @@
  * @typedef {{
  *  help: Boolean,
  *  sleepTime: Number,
- *  _: (String | Number | Boolean)[],
+ *  _: String[],
  * }} MyFlags
  */
 
@@ -29,12 +29,12 @@ export async function main(ns) {
     ns.tprint(`\t> run ${ns.getScriptName()} joesguns`);
     return
   }
+  const target = String(flags._[0]);
 
   // We prepare the logging.
   ns.ui.openTail();
   ns.disableLog('ALL');
 
-  const target = String(flags._[0]);
   while (true) {
     const money = ns.getServerMoneyAvailable(target) === 0 ? 1 : ns.getServerMoneyAvailable(target);
     const maxMoney = ns.getServerMaxMoney(target);
