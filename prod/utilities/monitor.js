@@ -4,8 +4,6 @@
  * The user account on Youtube: https://www.youtube.com/@theblackhat5473
  */
 
-import { Logger } from "../src/logger";
-import { Payloads } from "../src/payloads";
 import { Server } from "../src/server";
 
 
@@ -34,9 +32,7 @@ export async function main(ns) {
     return
   }
 
-  const payloads = new Payloads(ns);
-  const logger = new Logger(ns);
-  const targetHost = new Server(ns, String(flags._[0]), payloads, logger);
+  const targetHost = new Server(ns, String(flags._[0]));
 
   // We prepare the logging.
   ns.ui.openTail();

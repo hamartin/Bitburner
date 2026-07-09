@@ -1,11 +1,5 @@
-// This is needed so that Visual Code can see Payloads ad Logger
-/**
- * @typedef {import("./payloads.js").Payloads} Payloads - This is needed so that Visual Code can resolve the Payloads class
- */
-
-/**
- * @typedef {import("./logger.js").Logger} Logger - This is needed so that Visual Code can resolve the Payloads class
- */
+import { Logger } from "./logger.js";
+import { Payloads } from "./payloads.js";
 
 
 /**
@@ -17,15 +11,17 @@ export class Server {
     /**
      * @param {NS} ns             - Netscript context
      * @param {string} hostName   - The server host name
-     * @param {Payloads} payloads - The Payloads context
-     * @param {Logger} logger     - The Logger context
      * @example const server = new Server(ns, "n00dles", payloads);
      */
-    constructor (ns, hostName, payloads, logger) {
+    constructor (ns, hostName) {
         this.ns = ns;
         this.hostName = hostName;
-        this.payloads = payloads;
-        this.logger = logger;
+        this.payloads = new Payloads(ns);
+        this.logger = new Logger(ns);
+    }
+
+    toString() {
+        return `${this.hostName}`;
     }
 
     /**

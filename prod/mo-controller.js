@@ -66,7 +66,7 @@ export async function main(ns) {
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
         const hostsThatCanBeHacked = getHostsThatCanBeHacked(ns, hostsDetails);
         const hostsNotHacked = hostsThatCanBeHacked.filter(host => !ns.hasRootAccess(host));
-        if (hostsNotHacked.length > 0) hackHosts(ns, logger, hostsNotHacked);
+        if (hostsNotHacked.length > 0) hackHosts(ns, hostsNotHacked);
 
         // We find all the servers we can use to hack other servers with and
         // compare it to known servers. We extract new unknown servers and work

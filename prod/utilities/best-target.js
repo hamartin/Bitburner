@@ -17,7 +17,7 @@ export async function main(ns) {
     const logger = new Logger(ns);
 
     // Find the best host to attack
-    const server = new Server(ns, player.getBestHostToAttack(), payloads, logger);
+    const server = new Server(ns, player.getBestHostToAttack());
     const threads = server.getHackThreads(HACK_PERCENTAGE);
 
     const hackRequiredRam = payloads.getRamRequirements(payloads.hackFileNameFull, threads.hack);

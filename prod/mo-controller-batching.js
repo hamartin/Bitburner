@@ -44,12 +44,12 @@ export async function main(ns) {
         return;
     }
 
-    const attackingHost = new Server(ns, ns.getHostname(), payloads, logger);
-    let targetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
+    const attackingHost = new Server(ns, ns.getHostname());
+    let targetHost = new Server(ns, player.getBestHostToAttack());
     await targetHost.prepHost();
 
     while (true) {
-        const newTargetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
+        const newTargetHost = new Server(ns, player.getBestHostToAttack());
         if (newTargetHost.hostName != targetHost.hostName) {
             targetHost = newTargetHost;
             logger.write(logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);

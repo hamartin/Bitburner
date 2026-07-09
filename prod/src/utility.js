@@ -1,10 +1,7 @@
+import { Logger } from "./logger";
+
 import { CRACKING_PROGRAMS } from "./constants";
 
-
-// This is needed so that Visual Code can resolve the Logger class
-/**
- * @typedef {import("../src/logger.js").Logger} Logger
- */
 
 // This is needed so that Visual Code can resolve the MyPlayer class
 /**
@@ -54,7 +51,6 @@ export function getHackingServerHostNames(ns, hosts) {
  * @returns {string[]}                - A list of strings where each index is a hostname for a host that can be hacked
  */
 export function getHostsThatCanBeHacked(ns, hosts) {
-    const playerHackingLevel = ns.getHackingLevel();
     const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns);
 
     const hostsThatCanBeHacked = [];
@@ -128,10 +124,10 @@ export function getNumberOfCrackingPrograms(ns) {
  * available and nukes it to finish things of
  * 
  * @param {NS} ns          - Netscript context
- * @param {Logger} logger  - The logging context
  * @param {string[]} hosts - List of hostnames to hack and nuke
  */
-export function hackHosts(ns, logger, hosts) {
+export function hackHosts(ns, hosts) {
+    const logger = new Logger(ns);
     for (const host of hosts) {
         for (const programName of CRACKING_PROGRAMS) {
             if (!ns.fileExists(programName, "home")) {
