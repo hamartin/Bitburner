@@ -1,10 +1,3 @@
-/**
- * @typedef TreeNode
- * @property {String} host
- * @property {TreeNode | null} parent
- * @property {TreeNode[]} children
- */
-
 /** @param {NS} ns **/
 export async function main(ns) {
     // We prepare the logging.
