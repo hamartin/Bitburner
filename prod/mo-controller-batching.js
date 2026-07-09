@@ -3,27 +3,26 @@ import { MyPlayer } from "./src/player";
 import { Payloads } from "./src/payloads";
 import { Server } from "./src/server";
 
-import {
-    HACK_PERCENTAGE,
-}from "./src/constants";
+import { HACK_PERCENTAGE } from "./src/constants";
 
 
 /**
- * @typedef {{ 
- *     _: String[]
+ * @typedef {{
+ *     help?: Boolean,
+ *     _?: number[],
  * }} MyFlags
  */
 
 /**
  * Controller script. This will focus on batching for the time being.
  * 
- * @param {NS} ns
- * @property {string[] | undefined} _[0] - Positional argument (same as ns.args[0]). The host name of the host to run the payload on. This effectively override the automatic host choosing.
+ * @param {NS} ns - Netscript context
+ * @returns
  */
 export async function main(ns) {
-    /** @type {MyFlags} */
-    const flags = /** @type {MyFlags} */ (ns.flags([]));
-    const fixedHost = String(flags._[0]);
+    const flags = /** @type {MyFlags} */ (ns.flags([
+        ["help", false],
+    ]));
 
     // We prepare the logging.
     ns.ui.openTail();
@@ -34,26 +33,28 @@ export async function main(ns) {
     const player = new MyPlayer(ns);
     const logger = new Logger(ns);
 
-    const BATCH_OFFSET_TIME = 500;
+    let batchDelay = 500;
+    if (flags._ && flags._.length !== 0) { 
+        batchDelay = Number(flags._[0]);
+    }
+
+    if (flags.help) {
+        logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} <BATCH DELAY> --help`)
+        logger.write(logger.INFO, "\t--help -> Shows this message.");
+        return;
+    }
 
     const attackingHost = new Server(ns, ns.getHostname(), payloads, logger);
-    let targetHost;
-    if (fixedHost === "undefined") {
-        targetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
-    } else {
-        targetHost = new Server(ns, fixedHost, payloads, logger);
-    }
+    let targetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
     await targetHost.prepHost();
 
     while (true) {
-        if (fixedHost === "undefined") {
-            const newTargetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
-            if (newTargetHost.hostName != targetHost.hostName) {
-                targetHost = newTargetHost;
-                logger.write(logger.INFO, `New optimal host to attack found ${targetHost}.`);
-                // Prepare the host, so we can get the required information to enable us to do batching.
-                await targetHost.prepHost();
-            }
+        const newTargetHost = new Server(ns, player.getBestHostToAttack(), payloads, logger);
+        if (newTargetHost.hostName != targetHost.hostName) {
+            targetHost = newTargetHost;
+            logger.write(logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
+            // Prepare the host, so we can get the required information to enable us to do batching.
+            await targetHost.prepHost();
         }
 
         const threads = targetHost.getHackThreads(HACK_PERCENTAGE);
@@ -70,7 +71,6 @@ export async function main(ns) {
                 ns.exit()
             }
         }
-
-        await ns.sleep(BATCH_OFFSET_TIME);
+        await ns.sleep(batchDelay);
     }
 }
