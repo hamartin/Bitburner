@@ -32,7 +32,7 @@ export async function main(ns) {
             cloudServers.buyServer();
         } else {
             // Find the server with the least amount of RAM installed.
-            const boughtServers = ns.cloud.getServerNames();
+            const boughtServers = cloudServers.getServerNames();
             let smallest = boughtServers[0];
             for (const host of boughtServers) {
                 if (ns.getServerMaxRam(host) < ns.getServerMaxRam(smallest)) smallest = host;

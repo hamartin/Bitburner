@@ -39,7 +39,7 @@ export class CloudServers {
         if (this.ns.getServerMoneyAvailable(this.ns.getHostname()) > cost) {
             const hostName = this.namePrefix + this.ns.cloud.getServerNames().length;
             this.ns.cloud.purchaseServer(hostName, this.ramTiers[0]);
-            this.logger.write(this.logger.INFO, `Bought new server ${hostName} with ${ramTier}GB`);
+            this.logger.write(this.logger.INFO, `Bought new server ${hostName} with ${this.ramTiers[0]}GB`);
         }
     }
 
@@ -53,6 +53,15 @@ export class CloudServers {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Returns a list of host names for cloud servers we have bought
+     * 
+     * @returns {string[]} - A list of host names for the cloud servers we have bought
+     */
+    getServerNames() {
+        return this.ns.cloud.getServerNames();
     }
 
     /**
