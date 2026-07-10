@@ -5,6 +5,7 @@ import { Logger } from "./src/logger";
 /**
  * @typedef {{
  *     help: Boolean,
+ *     _: String
  * }} MyFlags
  */
 
@@ -12,12 +13,16 @@ import { Logger } from "./src/logger";
  * Controller script. This will focus on batching for the time being.
  * 
  * @param {NS} ns - Netscript context
+ * @example run mo-controller-batching.js
+ * @example run mo-controller-batching.js n00dles
+ * @example run mo-controller-batching.js --help
  * @returns
  */
 export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["help", false],
     ]));
+    const targetHost = flags._[0];
 
     // We prepare the logging.
     ns.ui.openTail();
@@ -28,9 +33,11 @@ export async function main(ns) {
     const controller = new Controller(ns);
 
     if (flags.help) {
-        logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} <BATCH DELAY> --help`)
+        logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} <TARGET HOST | Optional> --help`)
+        logger.write(logger.INFO, "\t<TARGET HOST> is optional. With it, no automatic target picking is done,");
+        logger.write(logger.INFO, "\t              without it, the controller chooses the target itself.")
         logger.write(logger.INFO, "\t--help -> Shows this message.");
         return;
     }
-    await controller.run();
+    await controller.run(targetHost);
 }

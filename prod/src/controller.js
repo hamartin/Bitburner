@@ -26,16 +26,96 @@ export class Controller {
     }
 
     /**
+     * Creates processes/threads distributed over the servers given in the list
+     * of hosts.
+     * 
+     * @param {Server[]} servers     - List of servers we can distribute the threads over
+     * @param {string} fileName      - The payload to attack with
+     * @param {number} threadsNeeded - The number of threads to spawn
+     * @param {string} targetHost    - The host to target our threads on
+     * @param {number} delayTime     - The time to delay the thread in millisecond
+     */
+    async #distributeThreads(servers, fileName, threadsNeeded, targetHost, delayTime) {
+        if (threadsNeeded <= 0) return;
+
+        for (const server of servers) {
+            const freeRam = server.getAvailableRam();
+            const scriptRam = this.payloads.getRamRequirements(fileName);
+
+            const maxThreads = Math.floor(freeRam / scriptRam);
+            if (maxThreads <= 0) continue;
+
+            const threads = Math.min(maxThreads, threadsNeeded);
+
+            this.ns.exec(fileName, server.hostName, threads, targetHost, 0);
+            threadsNeeded -= threads;
+
+            if (threadsNeeded <= 0) break;
+        }
+    }
+
+    /**
+     * Prepares the host given as an argument. Meanining it will make sure the
+     * host has the most amount of money it can have, and also the least amount
+     * of security it can have.
+     * 
+     * @param {string} targetHostName 
+     * @returns
+     */
+    async distributedPrepare(targetHostName) {
+        this.logger.write(this.logger.INFO, `Starting to prepare the target host (${targetHostName}) for batching.`);
+        while (true) {
+            const servers = this.getUsableHosts();
+
+            // Check if the host still needs more prepping.
+            const targetHost = new Server(this.ns, targetHostName);
+            const weakenStatus = targetHost.getWeakenStatus();
+            const growStatus = targetHost.getGrowStatus();
+
+            if (weakenStatus <= 0 && growStatus <= 0) {
+                this.logger.write(this.logger.INFO, `Done with preparing the target host (${targetHost}).`);
+                return
+            }
+
+            // We figure out the weaken stuff
+            const weakenThreads = weakenStatus > 0
+                ? Math.ceil(weakenStatus / this.ns.weakenAnalyze(1))
+                : 0;
+
+            // We figure out the grow stuff
+            const moneyMax = targetHost.stats.moneyMax === undefined
+                ? 0
+                : targetHost.stats.moneyMax;
+            const moneyAvailable = targetHost.stats.moneyAvailable === undefined
+                ? 0
+                : targetHost.stats.moneyAvailable;
+            const growThreads = growStatus > 0
+                ? Math.ceil(this.ns.growthAnalyze(targetHost.hostName, moneyMax / Math.max(moneyAvailable, 1)))
+                : 0;
+
+            // Distribute work across workers
+            await this.#distributeThreads(servers, this.payloads.weakenFileNameFull, weakenThreads, targetHost.hostName, 0);
+            await this.#distributeThreads(servers, this.payloads.growFileNameFull, growThreads, targetHost.hostName, 0);
+
+            // Wait for the longest operation to finish
+            const waitTime = Math.max(
+                this.ns.getWeakenTime(targetHost.hostName),
+                this.ns.getGrowTime(targetHost.hostName)
+            );
+        await this.ns.sleep(waitTime + 50);
+        } 
+    }
+
+    /**
      * Returns a list og hosts which has more than 0GB RAM and that has been Nuked.
      * 
      * @returns {Server[]} - A list of host names corresponding to hosts which has more than 0GB RAM and that has been Nuked.
      */
     getUsableHosts() {
-        const hosts = getNetworkHostNames(this.ns);
-        const hackingHostNames = getHackingServerHostNames(this.ns, hosts);
-        const hackingHosts = hackingHostNames.map(hostName => new Server(this.ns, hostName));
-
-        return hackingHosts;
+        const hostNames = getNetworkHostNames(this.ns);
+        const hackingHostNames = getHackingServerHostNames(this.ns, hostNames);
+        const hosts = hackingHostNames.map(s => new Server(this.ns, s));
+        return hosts;
     }
 
     /**
@@ -53,19 +133,32 @@ export class Controller {
         return ret;
     }
 
-    async run() {
+    /**
+     * 
+     * @param {String | undefined} target
+     */
+    async run(target = undefined) {
         // Chose an initial target host and prepare it.
-        let targetHost = new Server(this.ns, this.player.getBestHostToAttack());
-        await targetHost.prepHost();
+        let targetHost;
+        if (target) {
+            targetHost = new Server(this.ns, target);
+        } else {
+            targetHost = new Server(this.ns, this.player.getBestHostToAttack());
+        }
+        this.logger.write(this.logger.INFO, `Starting process of attacking ${targetHost.hostName}`);
+        await this.distributedPrepare(targetHost.hostName);
 
         while (true) {
-            // Check if we need to switch to a new host and prepare the host if we do.
-            const newTargetHost = new Server(this.ns, this.player.getBestHostToAttack());
-            if (newTargetHost.hostName != targetHost.hostName) {
-                targetHost = newTargetHost;
-                this.logger.write(this.logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
-                // Prepare the host, so we can get the required information to enable us to do batching.
-                await targetHost.prepHost();
+            if (!target) {
+                // Check if we need to switch to a new host and prepare the host if we do.
+                const newTargetHost = new Server(this.ns, this.player.getBestHostToAttack());
+                // We override this if we have set a host name to target as an argument.
+                if (newTargetHost.hostName != targetHost.hostName) {
+                    targetHost = newTargetHost;
+                    this.logger.write(this.logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
+                    // Prepare the host, so we can get the required information to enable us to do batching.
+                    await this.distributedPrepare(targetHost.hostName);
+                }
             }
 
             // Find a host that has enough RAM free to run a batch.

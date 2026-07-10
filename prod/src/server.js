@@ -18,6 +18,7 @@ export class Server {
         this.hostName = hostName;
         this.payloads = new Payloads(ns);
         this.logger = new Logger(ns);
+        this.stats = ns.getServer(hostName);
     }
 
     toString() {
@@ -30,7 +31,25 @@ export class Server {
      * @returns {number}
      */
     getAvailableRam() {
-        return this.ns.getServerMaxRam(this.hostName) - this.ns.getServerUsedRam(this.hostName);
+        return this.stats.maxRam - this.stats.ramUsed;
+    }
+
+    /**
+     * Returns generic information about the host.
+     * 
+     * @return {ServerStats}
+     */
+    getCurrentInfo() {
+        const money = this.stats.moneyAvailable === undefined
+            ? 1
+            : this.stats.moneyAvailable;
+        const maxMoney = this.stats.moneyMax === undefined
+            ? 0
+            : this.stats.moneyMax;
+
+        const minSec = this.ns.getServerMinSecurityLevel(this.hostName);
+        const sec = this.ns.getServerSecurityLevel(this.hostName);
+        return {currentMoney: money, maxMoney: maxMoney, currentSecurity: sec, minSecurity: minSec};
     }
 
     /**
@@ -77,19 +96,6 @@ export class Server {
      */
     getNumbRunningProcesses() {
         return this.ns.ps(this.hostName).length
-    }
-
-    /**
-     * Returns generic information about the host.
-     * 
-     * @return {ServerStats}
-     */
-    getCurrentInfo() {
-        const money = this.ns.getServerMoneyAvailable(this.hostName) === 0 ? 1 : this.ns.getServerMoneyAvailable(this.hostName);
-        const maxMoney = this.ns.getServerMaxMoney(this.hostName);
-        const minSec = this.ns.getServerMinSecurityLevel(this.hostName);
-        const sec = this.ns.getServerSecurityLevel(this.hostName);
-        return {currentMoney: money, maxMoney: maxMoney, currentSecurity: sec, minSecurity: minSec};
     }
 
     /**
@@ -145,5 +151,35 @@ export class Server {
 
             await this.ns.sleep(200);
         }
+    }
+
+    /**
+     * Returns the amount of security we can reduce the host by at its current state.
+     * 
+     * @returns {number} - The retaining security we can remove.
+     */
+    getWeakenStatus() {
+        const hackDifficulty = this.stats.hackDifficulty === undefined
+            ? 0
+            : this.stats.hackDifficulty;
+        const minDifficulty = this.stats.minDifficulty === undefined
+            ? 0
+            : this.stats.minDifficulty;
+        return hackDifficulty - minDifficulty;
+    }
+
+    /**
+     * Returns the amount of money we can grow the host by at its current state.
+     * 
+     * @returns {number} - The retaining money we can grow.
+     */
+    getGrowStatus() {
+        const moneyMax = this.stats.moneyMax === undefined
+            ? 0
+            : this.stats.moneyMax;
+        const moneyAvailable = this.stats.moneyAvailable === undefined
+            ? 0
+            : this.stats.moneyAvailable;
+        return moneyMax - moneyAvailable;
     }
 }
