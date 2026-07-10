@@ -28,22 +28,4 @@ export class Logger {
         const timeStamp = new Date().toLocaleString(locale).replace(",", "");
         this.ns.print(`${level} ${timeStamp} ${message}`);
     }
-
-    /**
-     * Format RAM values into human‑readable units.
-     * 
-     * @param {number} ram - RAM in gigabytes
-     * @returns {string}   - RAM formatted to the correct unit.
-     */
-    formatRam(ram) {
-        const units = ["GB", "TB", "PB", "EB", "ZB", "YB"];
-        let unitIndex = 0;
-
-        while (ram >= 1024 && unitIndex < units.length - 1) {
-            ram /= 1024;
-            unitIndex++;
-        }
-
-        return `${ram.toFixed(2)}${units[unitIndex]}`;
-    }
 }

@@ -102,7 +102,7 @@ export class CloudServers {
         const cost = this.ns.cloud.getServerUpgradeCost(hostName, nextRamTier);
         if (this.ns.getServerMoneyAvailable(this.ns.getHostname()) > cost) {
             this.ns.cloud.upgradeServer(hostName, nextRamTier);
-            this.logger.write(this.logger.INFO, `Upgraded RAM on ${hostName} from ${this.logger.formatRam(ramTier)} to ${this.logger.formatRam(nextRamTier)}`);
+            this.logger.write(this.logger.INFO, `Upgraded RAM on ${hostName} from ${this.ns.format.ram(ramTier, 2)} to ${this.ns.format.ram(nextRamTier, 2)}`);
         }
     }
 }
