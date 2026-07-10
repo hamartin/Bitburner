@@ -6,7 +6,3 @@ export const CRACKING_PROGRAMS = [
     "HTTPWorm.exe",
     "SQLInject.exe",
 ];
-
-// The amount to steal from a server for each batch were firing off.
-// 0 = 0% -> 1 = 100%
-export const HACK_PERCENTAGE = .1;

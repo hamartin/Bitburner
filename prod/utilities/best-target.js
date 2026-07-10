@@ -3,8 +3,6 @@ import { MyPlayer } from "../src/player";
 import { Payloads } from "../src/payloads";
 import { Server } from "../src/server";
 
-import { HACK_PERCENTAGE } from "../src/constants";
-
 
 /** @param {NS} ns */
 export async function main(ns) {
@@ -15,6 +13,7 @@ export async function main(ns) {
     const player = new MyPlayer(ns);
     const payloads = new Payloads(ns);
     const logger = new Logger(ns);
+    const HACK_PERCENTAGE = .1;
 
     // Find the best host to attack
     const server = new Server(ns, player.getBestHostToAttack());

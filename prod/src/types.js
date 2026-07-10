@@ -36,6 +36,10 @@
  */
 
 /**
+ * @typedef {Map<String, Number>} HostRam
+ */
+
+/**
  * @typedef TreeNode
  * @property {String} host
  * @property {TreeNode | null} parent
