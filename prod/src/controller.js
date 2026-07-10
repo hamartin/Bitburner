@@ -55,14 +55,12 @@ export class Controller {
 
     async run() {
         // Chose an initial target host and prepare it.
-        //let targetHost = new Server(this.ns, this.player.getBestHostToAttack());
-        let targetHost = new Server(this.ns, "n00dles");
+        let targetHost = new Server(this.ns, this.player.getBestHostToAttack());
         await targetHost.prepHost();
 
         while (true) {
             // Check if we need to switch to a new host and prepare the host if we do.
-            //const newTargetHost = new Server(this.ns, this.player.getBestHostToAttack());
-            const newTargetHost = new Server(this.ns, "n00dles");
+            const newTargetHost = new Server(this.ns, this.player.getBestHostToAttack());
             if (newTargetHost.hostName != targetHost.hostName) {
                 targetHost = newTargetHost;
                 this.logger.write(this.logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
@@ -97,9 +95,7 @@ export class Controller {
                     this.ns.exit()
                 }
             }
-
-            // test
-            await this.ns.sleep(50);
+            await this.ns.sleep(10);
         }
     }
 }
