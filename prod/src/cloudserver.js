@@ -14,7 +14,7 @@ export class CloudServers {
      * @example const cloudServers = new CloudServers(ns);
      * @example const cloudServers = new CloudServers(ns, "SomeCoolName-");
      */
-    constructor (ns, namePrefix = "Vogon-1") {
+    constructor (ns, namePrefix = "Vogon-") {
         this.ns = ns;
         this.namePrefix = namePrefix;
         // The different amount of RAM you can have on a cloud purchased server. We are
