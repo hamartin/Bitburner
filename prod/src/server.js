@@ -5,7 +5,7 @@ import { Payloads } from "./payloads.js";
 /**
  * A class to keep track of what is happening on a server.
  * 
- * @example const server = new Server(ns, "n00dles", payloads);
+ * @example const server = new Server(ns, "n00dles");
  */
 export class Server {
     /**
