@@ -1,3 +1,5 @@
+import { Logger } from "../src/logger";
+
 //
 // This whole file is created by Copilot in pure vibecoding. I originally had a
 // script which just printed the path to all hosts where a backdoor was not
@@ -19,6 +21,8 @@ export async function main(ns) {
     ns.disableLog('ALL');
     ns.clearLog();
 
+    const logger = new Logger(ns);
+
     const hackingLevel = ns.getHackingLevel();
     const tree = await buildTree(ns, "home");
     const pending = [];
@@ -33,7 +37,9 @@ export async function main(ns) {
     const lines = pending.map(node => buildConnectCommand(buildFullPath(node)));
     lines.sort();
     ns.print("⛔ Hosts that still need a backdoor:\n");
-    for (const line of lines) ns.print(line);
+    for (const line of lines) {
+        ns.print(line);
+    }
 }
 
 /**

@@ -3,7 +3,12 @@ import { Payloads } from "./payloads";
 import { MyPlayer } from "./player";
 import { Server } from "./server";
 
-import { getHackingServerHostNames, getNetworkHostNames } from "./utility";
+import { 
+    getHackingServerHostNames,
+    getHostsThatCanBeHacked,
+    getNetworkHostNames,
+    hackHosts,
+} from "./utility";
 
 /**
  * A class to control the batching of hacks on machines in the cluster.
@@ -112,10 +117,9 @@ export class Controller {
      * @returns {Server[]} - A list of host names corresponding to hosts which has more than 0GB RAM and that has been Nuked.
      */
     getUsableHosts() {
-        const hostNames = getNetworkHostNames(this.ns);
+        const hostNames = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
         const hackingHostNames = getHackingServerHostNames(this.ns, hostNames);
-        const hosts = hackingHostNames.map(s => new Server(this.ns, s));
-        return hosts;
+        return hackingHostNames;
     }
 
     /**
@@ -160,6 +164,12 @@ export class Controller {
                     await this.distributedPrepare(targetHost.hostName);
                 }
             }
+
+            // Hack all the hosts which has not been hacked yet and that we are able to hack.
+            const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
+            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
+            const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
+            if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
 
             // Find a host that has enough RAM free to run a batch.
             const hackingHosts = this.getUsableHosts();

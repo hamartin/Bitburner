@@ -1,4 +1,5 @@
 import { Logger } from "./logger";
+import { Server } from "./server";
 
 import { CRACKING_PROGRAMS } from "./constants";
 
@@ -32,11 +33,11 @@ export function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileNam
  * Returns a list of host names for hacking servers we have allready bought.
  * 
  * @param {NS} ns          - Netscript context
- * @param {string[]} hosts - List of servers
- * @returns {string[]}     - List of servers that can be used for hacking
+ * @param {Server[]} hosts - List of servers
+ * @returns {Server[]}     - List of servers that can be used for hacking
  */
 export function getHackingServerHostNames(ns, hosts) {
-    const hackingServers = hosts.filter(host => ns.hasRootAccess(host) && ns.getServerMaxRam(host) > 0);
+    const hackingServers = hosts.filter(host => ns.hasRootAccess(host.hostName) && host.stats.maxRam > 0);
     return hackingServers;
 }
 
@@ -46,38 +47,24 @@ export function getHackingServerHostNames(ns, hosts) {
  * If the player has a high enough hacking level to hack the host, the
  * host is added to a list and returned at the end of the execution.
  * 
- * @param {NS} ns                     - Netscript context
- * @param {Map<string, object>} hosts - A map with hostnames as key and details as values
- * @returns {string[]}                - A list of strings where each index is a hostname for a host that can be hacked
+ * @param {NS} ns          - Netscript context
+ * @param {Server[]} hosts - A list of Server objects
+ * @returns {Server[]}     - A list of Server objects which can be hacked
  */
 export function getHostsThatCanBeHacked(ns, hosts) {
     const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns);
 
     const hostsThatCanBeHacked = [];
-    for (const [host, details] of hosts) {
-        if (details.numOpenPortsRequired > numberOfCrackingPrograms) {
+    for (const host of hosts) {
+        const numbOpenPortsRequired = host.stats.numOpenPortsRequired === undefined
+            ? 5
+            : host.stats.numOpenPortsRequired;
+        if (numbOpenPortsRequired > numberOfCrackingPrograms) {
             continue;
         }
         hostsThatCanBeHacked.push(host);
     }
     return hostsThatCanBeHacked;
-}
-
-/**
- * The function will return a map of all servers in the network, with
- * the server name as the key and the server details as the value.
- * 
- * @param {NS} ns                 - Netscript context
- * @param {string[]} hostNames    - A list of hostnames to return details for
- * @returns {Map<string, Object>} - A map with hostnames as keys and details as values
- */
-export function getNetworkHostsDetails(ns, hostNames) {
-    const hosts = new Map();
-    for (const host of hostNames) {
-        const details = ns.getServer(host);
-        hosts.set(host, details);
-    }
-    return hosts;
 }
 
 /**
@@ -124,7 +111,7 @@ export function getNumberOfCrackingPrograms(ns) {
  * available and nukes it to finish things of
  * 
  * @param {NS} ns          - Netscript context
- * @param {string[]} hosts - List of hostnames to hack and nuke
+ * @param {Server[]} hosts - List of Server objects to hack and nuke
  */
 export function hackHosts(ns, hosts) {
     const logger = new Logger(ns);
@@ -135,24 +122,24 @@ export function hackHosts(ns, hosts) {
             }
             switch (programName) {
                 case "BruteSSH.exe":
-                    ns.brutessh(host);
+                    ns.brutessh(host.hostName);
                     break;
                 case "FTPCrack.exe":
-                    ns.ftpcrack(host);
+                    ns.ftpcrack(host.hostName);
                     break;
                 case "relaySMTP.exe":
-                    ns.relaysmtp(host);
+                    ns.relaysmtp(host.hostName);
                     break;
                 case "HTTPWorm.exe":
-                    ns.httpworm(host);
+                    ns.httpworm(host.hostName);
                     break;
                 case "SQLInject.exe":
-                    ns.sqlinject(host);
+                    ns.sqlinject(host.hostName);
                     break;
             }
-            logger.write(logger.SUCCESS, `Executed ${programName} on ${host}`);
+            logger.write(logger.SUCCESS, `Executed ${programName} on ${host.hostName}`);
         }
-        ns.nuke(host);
+        ns.nuke(host.hostName);
         logger.write(logger.SUCCESS, `Nuked ${host}`);
     }
 }

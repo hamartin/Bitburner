@@ -2,11 +2,11 @@ import { CloudServers } from "./src/cloudserver";
 import { Logger } from "./src/logger";
 import { MyPlayer } from "./src/player";
 import { Payloads } from "./src/payloads";
+import { Server } from "./src/server";
 
 import {
     getHackingServerHostNames,
     getHostsThatCanBeHacked,
-    getNetworkHostsDetails,
     getNetworkHostNames,
     hackHosts,
     killAllProcessesAndRunScript,
@@ -60,21 +60,20 @@ export async function main(ns) {
         // network and its details. Note that the bought servers does
         // not show up in the scan. This is also true for all the Dark
         // Net servers.
-        const hosts = getNetworkHostNames(ns);
-        const hostsDetails = getNetworkHostsDetails(ns, hosts);
+        const hosts = getNetworkHostNames(ns).map(h => new Server(ns, h));
 
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
-        const hostsThatCanBeHacked = getHostsThatCanBeHacked(ns, hostsDetails);
-        const hostsNotHacked = hostsThatCanBeHacked.filter(host => !ns.hasRootAccess(host));
+        const hostsThatCanBeHacked = getHostsThatCanBeHacked(ns, hosts);
+        const hostsNotHacked = hostsThatCanBeHacked.filter(host => !ns.hasRootAccess(host.hostName));
         if (hostsNotHacked.length > 0) hackHosts(ns, hostsNotHacked);
 
         // We find all the servers we can use to hack other servers with and
         // compare it to known servers. We extract new unknown servers and work
         // on those and also updating the known list of servers.
         const currentHackingServers = getHackingServerHostNames(ns, hosts);
-        const newHackingServers = currentHackingServers.filter(host => !knownHackingServers.has(host));
+        const newHackingServers = currentHackingServers.filter(host => !knownHackingServers.has(host.hostName));
         knownHackingServers.clear();
-        for (const host of currentHackingServers) knownHackingServers.add(host);
+        for (const host of currentHackingServers) knownHackingServers.add(host.hostName);
 
         // Finds the best target and if the target host is something other than
         // previous best target, then we redploy and run the scripts against the
@@ -88,13 +87,13 @@ export async function main(ns) {
         }
 
         for (const host of hackingServers) {
-            if (host == ns.getHostname()) continue;
-            await ns.scp(payloads.allFileNameFull, host);
-            await ns.scp(payloads.hackFileNameFull, host);
-            await ns.scp(payloads.growFileNameFull, host);
-            await ns.scp(payloads.weakenFileNameFull, host);
+            if (host.hostName == ns.getHostname()) continue;
+            await ns.scp(payloads.allFileNameFull, host.hostName);
+            await ns.scp(payloads.hackFileNameFull, host.hostName);
+            await ns.scp(payloads.growFileNameFull, host.hostName);
+            await ns.scp(payloads.weakenFileNameFull, host.hostName);
             ns.print(logger.INFO + `Copied all payload files to ${targetHost}.`);
-            killAllProcessesAndRunScript(ns, logger, host, targetHost, payloads.allFileNameFull);
+            killAllProcessesAndRunScript(ns, logger, host.hostName, targetHost, payloads.allFileNameFull);
         }
 
         // This part is identical to the hacking servers part above with the
