@@ -80,12 +80,12 @@ export class Controller {
             const servers = this.getUsableHosts();
 
             // Check if the host still needs more prepping.
-            const targetServer = new Server(this.#ns, targetHostName);
+            const targetServer = new Server(this.#ns, targetHostName, this.#debug);
             const weakenStatus = targetServer.getWeakenStatus();
             const growStatus = targetServer.getGrowStatus();
 
             if (weakenStatus <= 0 && growStatus <= 0) {
-                if (this.#debug) this.#logger.debug(`W: ${weakenStatus}, G: ${growStatus}`);
+                if (this.#debug) this.#logger.debug(`Weaken: ${weakenStatus}, Grow: ${growStatus}`);
                 this.#logger.info(`Done with preparing the target host (${targetServer}).`);
                 return
             }
@@ -164,7 +164,6 @@ export class Controller {
             : new Server(this.#ns, this.player.getBestHostToAttack());
         this.#logger.info(`Starting process of attacking ${targetHost.hostName}`);
         await this.distributedPrepare(targetHost.hostName);
-        this.#ns.exit();
 
         while (true) {
             // Hack all the hosts which has not been hacked yet and that we are able to hack.

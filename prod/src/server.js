@@ -8,17 +8,21 @@ import { Payloads } from "./payloads.js";
  * @example const server = new Server(ns, "n00dles");
  */
 export class Server {
+    #debug;
     #logger;
     #ns;
 
     /**
-     * @param {NS} ns             - Netscript context
-     * @param {string} hostName   - The server host name
-     * @example const server = new Server(ns, "n00dles", payloads);
+     * @param {NS} ns                 - Netscript context
+     * @param {string} hostName       - The server host name
+     * @param {boolean} [debug=false] - Prints debugging info to logging window if true  
+     * @example const server = new Server(ns, "n00dles");
+     * @example const server = new Server(ns, "n00dles", true);
      */
-    constructor (ns, hostName) {
-        this.#ns = ns;
+    constructor (ns, hostName, debug = false) {
+        this.#debug = debug;
         this.#logger = new Logger(ns);
+        this.#ns = ns;
 
         this.hostName = hostName;
         this.payloads = new Payloads(ns);
@@ -184,6 +188,8 @@ export class Server {
         const moneyAvailable = this.stats.moneyAvailable === undefined
             ? 0
             : this.stats.moneyAvailable;
+
+        if (this.#debug) this.#logger.debug(`Server: ${this.hostName}: moneyMax -> ${moneyMax}, moneyAvailable -> ${moneyAvailable}`);
         return moneyMax - moneyAvailable;
     }
 }
