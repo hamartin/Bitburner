@@ -7,12 +7,14 @@ import { getNetworkHostNames } from "./utility";
  * @example const player = new MyPlayer(ns);
  */
 export class MyPlayer {
+    #ns;
+
     /**
      * @param {NS} ns - Netscript context
      * @example const player = new MyPlayer(ns);
      */
     constructor (ns) {
-        this.ns = ns;
+        this.#ns = ns;
     }
 
     /**
@@ -23,13 +25,13 @@ export class MyPlayer {
      * @returns {number}
      */
     #getGrowTime(hostName) {
-        if (this.ns.fileExists("Formulas.exe", "home")) {
-            const server = this.ns.getServer(hostName);
-            const player = this.ns.getPlayer();
-            return this.ns.formulas.hacking.growTime(server, player);
+        if (this.#ns.fileExists("Formulas.exe", "home")) {
+            const server = this.#ns.getServer(hostName);
+            const player = this.#ns.getPlayer();
+            return this.#ns.formulas.hacking.growTime(server, player);
         }
 
-        return this.ns.getGrowTime(hostName);
+        return this.#ns.getGrowTime(hostName);
     }
 
     /**
@@ -43,9 +45,9 @@ export class MyPlayer {
      * @returns {AttackTimes}     - An object containing attack base times.
      */
     getAttackTimes(targetHost) {
-        const hackTime = this.ns.getHackTime(targetHost);
+        const hackTime = this.#ns.getHackTime(targetHost);
         const growTime = this.#getGrowTime(targetHost);
-        const weakenTime = this.ns.getWeakenTime(targetHost);
+        const weakenTime = this.#ns.getWeakenTime(targetHost);
 
         return {hack: hackTime, grow: growTime, weaken: weakenTime};
     }
@@ -66,23 +68,23 @@ export class MyPlayer {
      * @returns {string} - The hostname of the host which is "best" to attack
      */
     getBestHostToAttack() {
-        const hostNames = getNetworkHostNames(this.ns);
-        const rootedHosts = hostNames.filter(s => this.ns.hasRootAccess(s));
+        const hostNames = getNetworkHostNames(this.#ns);
+        const rootedHosts = hostNames.filter(s => this.#ns.hasRootAccess(s));
 
         let best = null;
         let bestScore = -Infinity;
         for (const hostName of rootedHosts) {
-            const maxMoney = this.ns.getServerMaxMoney(hostName);
+            const maxMoney = this.#ns.getServerMaxMoney(hostName);
             if (maxMoney <= 0) continue;
-            const requiredHackingSkill = this.ns.getServerRequiredHackingLevel(hostName);
+            const requiredHackingSkill = this.#ns.getServerRequiredHackingLevel(hostName);
             // We divide by 3 because when your hacking level is 3 times bigger
             // than the target host required hacking level, then probability of
             // success in all 4 batching stages gets a lot higher.
-            if (this.ns.getHackingLevel() < requiredHackingSkill/3) continue;
+            if (this.#ns.getHackingLevel() < requiredHackingSkill/3) continue;
 
-            const hackPercent = this.ns.hackAnalyze(hostName);
-            const hackTime = this.ns.getHackTime(hostName);
-            const growth = this.ns.getGrowTime(hostName);
+            const hackPercent = this.#ns.hackAnalyze(hostName);
+            const hackTime = this.#ns.getHackTime(hostName);
+            const growth = this.#ns.getGrowTime(hostName);
             const score = (maxMoney * hackPercent * growth) / hackTime;
 
             if (score > bestScore) {

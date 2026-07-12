@@ -5,6 +5,7 @@ import { Logger } from "./src/logger";
 /**
  * @typedef {{
  *     help: Boolean,
+ *     debug: Boolean,
  *     _: String
  * }} MyFlags
  */
@@ -15,12 +16,14 @@ import { Logger } from "./src/logger";
  * @param {NS} ns - Netscript context
  * @example run mo-controller-batching.js
  * @example run mo-controller-batching.js n00dles
+ * @example run mo-controller-batching.js n00dles --debug
  * @example run mo-controller-batching.js --help
  * @returns
  */
 export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["help", false],
+        ["debug", false],
     ]));
     const targetHost = flags._[0];
 
@@ -30,7 +33,7 @@ export async function main(ns) {
     ns.clearLog();
 
     const logger = new Logger(ns);
-    const controller = new Controller(ns);
+    const controller = new Controller(ns, flags.debug);
 
     if (flags.help) {
         logger.info(`Usage: run ${ns.getScriptName()} <TARGET HOST | Optional> --help`)

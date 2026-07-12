@@ -9,6 +9,7 @@ import { Payloads } from "./payloads.js";
  */
 export class Server {
     #logger;
+    #ns;
 
     /**
      * @param {NS} ns             - Netscript context
@@ -16,10 +17,11 @@ export class Server {
      * @example const server = new Server(ns, "n00dles", payloads);
      */
     constructor (ns, hostName) {
-        this.ns = ns;
+        this.#ns = ns;
+        this.#logger = new Logger(ns);
+
         this.hostName = hostName;
         this.payloads = new Payloads(ns);
-        this.#logger = new Logger(ns);
         this.stats = ns.getServer(hostName);
     }
 
@@ -49,8 +51,8 @@ export class Server {
             ? 0
             : this.stats.moneyMax;
 
-        const minSec = this.ns.getServerMinSecurityLevel(this.hostName);
-        const sec = this.ns.getServerSecurityLevel(this.hostName);
+        const minSec = this.#ns.getServerMinSecurityLevel(this.hostName);
+        const sec = this.#ns.getServerSecurityLevel(this.hostName);
         return {currentMoney: money, maxMoney: maxMoney, currentSecurity: sec, minSecurity: minSec};
     }
 
@@ -61,12 +63,12 @@ export class Server {
      * @returns {Threads}
      */
     getHackThreads(hackPercentage) {
-        const baseHackPercent = this.ns.hackAnalyze(this.hostName);
-        const baseWeakenPower = this.ns.weakenAnalyze(1);
+        const baseHackPercent = this.#ns.hackAnalyze(this.hostName);
+        const baseWeakenPower = this.#ns.weakenAnalyze(1);
 
         const hackThreads = Math.floor(hackPercentage / baseHackPercent);
         const weakenHackThreads = Math.ceil((hackThreads * 0.002) / baseWeakenPower);
-        const growThreads = Math.ceil(this.ns.growthAnalyze(this.hostName, 1 / (1 - hackPercentage)));
+        const growThreads = Math.ceil(this.#ns.growthAnalyze(this.hostName, 1 / (1 - hackPercentage)));
         const weakenGrowThreads = Math.ceil((growThreads * 0.004) / baseWeakenPower);
         const totalThreads = hackThreads + weakenHackThreads + growThreads + weakenGrowThreads;
 
@@ -97,7 +99,7 @@ export class Server {
      * @returns {number}
      */
     getNumbRunningProcesses() {
-        return this.ns.ps(this.hostName).length
+        return this.#ns.ps(this.hostName).length
     }
 
     /**
@@ -116,42 +118,42 @@ export class Server {
         this.#logger.info(`Starting to prepare host ${this.hostName}.`);
         this.#logger.info(`This might take some time. You can see the progress doing > run ./utilities/monitor.js ${this.hostName}`);
         while (true) {
-            const freeMem = this.ns.getServerMaxRam(this.ns.getHostname()) - this.ns.getServerUsedRam(this.ns.getHostname());
+            const freeMem = this.#ns.getServerMaxRam(this.#ns.getHostname()) - this.#ns.getServerUsedRam(this.#ns.getHostname());
             // Checking if the host is at minimum security level, if not we weaken it.
-            if (this.ns.getServerSecurityLevel(this.hostName) > this.ns.getServerMinSecurityLevel(this.hostName)) {
+            if (this.#ns.getServerSecurityLevel(this.hostName) > this.#ns.getServerMinSecurityLevel(this.hostName)) {
                 const threads = Math.floor(freeMem / weakenMem);
                 if (threads <= 0) {
-                    this.ns.alert("Not enough memory to run the weaken script for prepping.");
-                    this.ns.exit();
+                    this.#ns.alert("Not enough memory to run the weaken script for prepping.");
+                    this.#ns.exit();
                 }
-                const pid = this.ns.run(this.payloads.weakenFileNameFull, threads, this.hostName, 0);
-                while (this.ns.isRunning(pid, this.ns.getHostname())) {
-                    await this.ns.sleep(200);
+                const pid = this.#ns.run(this.payloads.weakenFileNameFull, threads, this.hostName, 0);
+                while (this.#ns.isRunning(pid, this.#ns.getHostname())) {
+                    await this.#ns.sleep(200);
                 }
             // Checking if the host has the most amount of money it can have, if not we grow it.
-            } else if (this.ns.getServerMoneyAvailable(this.hostName) < this.ns.getServerMaxMoney(this.hostName)) {
+            } else if (this.#ns.getServerMoneyAvailable(this.hostName) < this.#ns.getServerMaxMoney(this.hostName)) {
                 const threads = Math.floor(freeMem / growMem);
                 if (threads <= 0) {
-                    this.ns.alert("Not enough memory to run the grow script for prepping.");
-                    this.ns.exit();
+                    this.#ns.alert("Not enough memory to run the grow script for prepping.");
+                    this.#ns.exit();
                 }
-                const pid = this.ns.run(this.payloads.growFileNameFull, threads, this.hostName, 0);
-                while (this.ns.isRunning(pid, this.ns.getHostname())) {
-                    await this.ns.sleep(200);
+                const pid = this.#ns.run(this.payloads.growFileNameFull, threads, this.hostName, 0);
+                while (this.#ns.isRunning(pid, this.#ns.getHostname())) {
+                    await this.#ns.sleep(200);
                 }
             }
 
             // Checking if host has the least amount of security it can have, and
             // that it has the most amount of money it can have. If both is true, we
             // break out of the loop and return.
-            if (this.ns.getServerSecurityLevel(this.hostName) <= this.ns.getServerMinSecurityLevel(this.hostName) 
-                && this.ns.getServerMoneyAvailable(this.hostName) >= this.ns.getServerMaxMoney(this.hostName)
+            if (this.#ns.getServerSecurityLevel(this.hostName) <= this.#ns.getServerMinSecurityLevel(this.hostName) 
+                && this.#ns.getServerMoneyAvailable(this.hostName) >= this.#ns.getServerMaxMoney(this.hostName)
             ) {
                 this.#logger.info(`Finished preparing host ${this.hostName}.`);
                 break;
             }
 
-            await this.ns.sleep(200);
+            await this.#ns.sleep(200);
         }
     }
 

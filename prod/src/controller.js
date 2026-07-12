@@ -17,17 +17,22 @@ import {
  * @example const controller = new Constroller(ns, .01);
  */
 export class Controller {
+    #debug;
     #logger;
+    #ns;
 
     /**
      * @param {NS} ns                      - Netscript context
      * @param {number} [hackPercentage=.1] - How much of the total money on a host we should hack per batch.
+     * @param {boolean} [debug=false]      - Writes extra debug info to logging window if true
      * @example const controller = new Controller(ns, .01);
      */
-    constructor (ns, hackPercentage = .1) {
-        this.ns = ns;
-        this.hackPercentage = hackPercentage;
+    constructor (ns, debug = false, hackPercentage = .1) {
+        this.#debug = debug;
         this.#logger = new Logger(ns);
+        this.#ns = ns;
+
+        this.hackPercentage = hackPercentage;
         this.payloads = new Payloads(ns);
         this.player = new MyPlayer(ns);
     }
@@ -54,7 +59,7 @@ export class Controller {
 
             const threads = Math.min(maxThreads, threadsNeeded);
 
-            this.ns.exec(fileName, server.hostName, threads, targetHost, 0);
+            this.#ns.exec(fileName, server.hostName, threads, targetHost, 0);
             threadsNeeded -= threads;
 
             if (threadsNeeded <= 0) break;
@@ -75,41 +80,42 @@ export class Controller {
             const servers = this.getUsableHosts();
 
             // Check if the host still needs more prepping.
-            const targetHost = new Server(this.ns, targetHostName);
-            const weakenStatus = targetHost.getWeakenStatus();
-            const growStatus = targetHost.getGrowStatus();
+            const targetServer = new Server(this.#ns, targetHostName);
+            const weakenStatus = targetServer.getWeakenStatus();
+            const growStatus = targetServer.getGrowStatus();
 
             if (weakenStatus <= 0 && growStatus <= 0) {
-                this.#logger.info(`Done with preparing the target host (${targetHost}).`);
+                if (this.#debug) this.#logger.debug(`W: ${weakenStatus}, G: ${growStatus}`);
+                this.#logger.info(`Done with preparing the target host (${targetServer}).`);
                 return
             }
 
             // We figure out the weaken stuff
             const weakenThreads = weakenStatus > 0
-                ? Math.ceil(weakenStatus / this.ns.weakenAnalyze(1))
+                ? Math.ceil(weakenStatus / this.#ns.weakenAnalyze(1))
                 : 0;
 
             // We figure out the grow stuff
-            const moneyMax = targetHost.stats.moneyMax === undefined
+            const moneyMax = targetServer.stats.moneyMax === undefined
                 ? 0
-                : targetHost.stats.moneyMax;
-            const moneyAvailable = targetHost.stats.moneyAvailable === undefined
+                : targetServer.stats.moneyMax;
+            const moneyAvailable = targetServer.stats.moneyAvailable === undefined
                 ? 0
-                : targetHost.stats.moneyAvailable;
+                : targetServer.stats.moneyAvailable;
             const growThreads = growStatus > 0
-                ? Math.ceil(this.ns.growthAnalyze(targetHost.hostName, moneyMax / Math.max(moneyAvailable, 1)))
+                ? Math.ceil(this.#ns.growthAnalyze(targetServer.hostName, moneyMax / Math.max(moneyAvailable, 1)))
                 : 0;
 
             // Distribute work across workers
-            await this.#distributeThreads(servers, this.payloads.weakenFileNameFull, weakenThreads, targetHost.hostName, 0);
-            await this.#distributeThreads(servers, this.payloads.growFileNameFull, growThreads, targetHost.hostName, 0);
+            await this.#distributeThreads(servers, this.payloads.weakenFileNameFull, weakenThreads, targetServer.hostName, 0);
+            await this.#distributeThreads(servers, this.payloads.growFileNameFull, growThreads, targetServer.hostName, 0);
 
             // Wait for the longest operation to finish
             const waitTime = Math.max(
-                this.ns.getWeakenTime(targetHost.hostName),
-                this.ns.getGrowTime(targetHost.hostName)
+                this.#ns.getWeakenTime(targetServer.hostName),
+                this.#ns.getGrowTime(targetServer.hostName)
             );
-        await this.ns.sleep(waitTime + 50);
+        await this.#ns.sleep(waitTime + 50);
         } 
     }
 
@@ -119,8 +125,8 @@ export class Controller {
      * @returns {Server[]} - A list of host names corresponding to hosts which has more than 0GB RAM and that has been Nuked.
      */
     getUsableHosts() {
-        const hostNames = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
-        const hackingHostNames = getHackingServerHostNames(this.ns, hostNames);
+        const hostNames = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
+        const hackingHostNames = getHackingServerHostNames(this.#ns, hostNames);
         return hackingHostNames;
     }
 
@@ -140,36 +146,37 @@ export class Controller {
     }
 
     /**
+     * Runs the controller and starts making money.
      * 
      * @param {string | undefined} target - If given, overrides the automatich choosing of which host to attack.
-     * @param {boolean} [debug=false]     - Write verbose debugging to screen if true.
      */
-    async run(target = undefined, debug = false) {
+    async run(target = undefined) {
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
-        const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
-        const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
-        const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
-        if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
-        if (debug) this.#logger.debug(`Number of hosts hacked and nuked: ${hostsNotHacked.length}`);
+        const allHosts = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
+        const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.#ns, allHosts);
+        const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.#ns.hasRootAccess(host.hostName));
+        if (hostsNotHacked.length > 0) hackHosts(this.#ns, hostsNotHacked);
+        if (this.#debug) this.#logger.debug(`Number of hosts hacked and nuked: ${hostsNotHacked.length}`);
 
         // Chose an initial target host and prepare it.
         let targetHost = target
-            ? new Server(this.ns, target)
-            : new Server(this.ns, this.player.getBestHostToAttack());
+            ? new Server(this.#ns, target)
+            : new Server(this.#ns, this.player.getBestHostToAttack());
         this.#logger.info(`Starting process of attacking ${targetHost.hostName}`);
         await this.distributedPrepare(targetHost.hostName);
+        this.#ns.exit();
 
         while (true) {
             // Hack all the hosts which has not been hacked yet and that we are able to hack.
-            const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
-            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
-            const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
-            if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
+            const allHosts = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
+            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.#ns, allHosts);
+            const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.#ns.hasRootAccess(host.hostName));
+            if (hostsNotHacked.length > 0) hackHosts(this.#ns, hostsNotHacked);
             this.#logger.info(`Hosts not hacked: ${hostsNotHacked}`);
 
             if (!target) {
                 // Check if we need to switch to a new host and prepare the host if we do.
-                const newTargetHost = new Server(this.ns, this.player.getBestHostToAttack());
+                const newTargetHost = new Server(this.#ns, this.player.getBestHostToAttack());
                 // We override this if we have set a host name to target as an argument.
                 if (newTargetHost.hostName != targetHost.hostName) {
                     targetHost = newTargetHost;
@@ -199,17 +206,17 @@ export class Controller {
             if (batchTargethost) {
                 const delays = this.player.getDelay(targetHost.hostName);
 
-                const hackPid = this.ns.exec(this.payloads.hackFileNameFull, batchTargethost.hostName, threads.hack, targetHost.hostName, delays.hack);
-                const hackWeakenPid = this.ns.exec(this.payloads.weakenFileNameFull, batchTargethost.hostName, threads.weakenHack, targetHost.hostName, delays.weakenHack);
-                const growPid = this.ns.exec(this.payloads.growFileNameFull, batchTargethost.hostName, threads.grow, targetHost.hostName, delays.grow);
-                const growWeakenPid = this.ns.exec(this.payloads.weakenFileNameFull, batchTargethost.hostName, threads.weakenGrow, targetHost.hostName, delays.weakenGrow);
+                const hackPid = this.#ns.exec(this.payloads.hackFileNameFull, batchTargethost.hostName, threads.hack, targetHost.hostName, delays.hack);
+                const hackWeakenPid = this.#ns.exec(this.payloads.weakenFileNameFull, batchTargethost.hostName, threads.weakenHack, targetHost.hostName, delays.weakenHack);
+                const growPid = this.#ns.exec(this.payloads.growFileNameFull, batchTargethost.hostName, threads.grow, targetHost.hostName, delays.grow);
+                const growWeakenPid = this.#ns.exec(this.payloads.weakenFileNameFull, batchTargethost.hostName, threads.weakenGrow, targetHost.hostName, delays.weakenGrow);
 
                 if (hackPid == 0 || hackWeakenPid == 0 || growPid == 0 || growWeakenPid == 0) {
-                    this.ns.alert("Failed to start the individual batch file hack/weaken/grow/weaken maybe to RAM")
-                    this.ns.exit()
+                    this.#ns.alert("Failed to start the individual batch file hack/weaken/grow/weaken maybe to RAM")
+                    this.#ns.exit()
                 }
             }
-            await this.ns.sleep(1000);
+            await this.#ns.sleep(50);
         }
     }
 }

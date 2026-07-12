@@ -5,6 +5,7 @@
  */
 export class Logger {
     #locale;
+    #ns;
 
     /**
      * @param {NS} ns - Netscript context
@@ -17,8 +18,8 @@ export class Logger {
         this.SUCCESS = "SUCCESS:";
         this.WARN = "WARN:";
 
+        this.#ns = ns;
         this.#locale = locale;
-        this.ns = ns;
     }
 
     /**
@@ -32,7 +33,7 @@ export class Logger {
         const timeStamp = locale !== undefined
             ? new Date().toLocaleString(locale).replace(",", "")
             : new Date().toLocaleString(this.#locale).replace(",", "");
-        this.ns.print(`${level} ${timeStamp} ${message}`);
+        this.#ns.print(`${level} ${timeStamp} ${message}`);
     }
 
     /**
