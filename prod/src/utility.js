@@ -157,5 +157,5 @@ export function hackHosts(ns, hosts) {
 export function killAllProcessesAndRunScript(ns, logger, host, targetHost, fileName) {
     ns.killall(host);
     executeScriptOnRemoteHost(ns, host, targetHost, fileName, true);
-    logger.write(logger.INFO, `Killed all processes and started script ${fileName} on host ${host}.`);
+    logger.info(`Killed all processes and started script ${fileName} on host ${host}.`);
 }

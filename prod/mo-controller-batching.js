@@ -33,7 +33,7 @@ export async function main(ns) {
     ns.clearLog();
 
     const logger = new Logger(ns);
-    const controller = new Controller(ns, flags.debug);
+    const controller = new Controller(ns, false);
 
     if (flags.help) {
         logger.info(`Usage: run ${ns.getScriptName()} <TARGET HOST | Optional> --help`)

@@ -67,6 +67,22 @@ export class Controller {
     }
 
     /**
+     * 
+     * @param {number} minRamRequirement - The minimum amount of RAM a server has to have to be usable
+     * @param {Server[]} servers        - A list of servers to check if any of the servers have enough RAM
+     * @returns {Server | undefined}     - Returns a server which has more RAM available than minRamRequirement
+     */
+    getBatchTargetServer(minRamRequirement, servers) {
+        for (const server of servers) {
+            if (server.hostName == "home") continue;
+            // We want the free RAM to be bigger and not equal to give us some space to work within.
+            if (server.getAvailableRam() > minRamRequirement) {
+                return server;
+            }
+        }
+    }
+
+    /**
      * Prepares the host given as an argument. Meanining it will make sure the
      * host has the most amount of money it can have, and also the least amount
      * of security it can have.
@@ -77,7 +93,7 @@ export class Controller {
     async distributedPrepare(targetHostName) {
         this.#logger.info(`Starting to prepare the target host (${targetHostName}) for batching.`);
         while (true) {
-            const servers = this.getUsableHosts();
+            const servers = this.getUsableServers();
 
             // Check if the host still needs more prepping.
             const targetServer = new Server(this.#ns, targetHostName, this.#debug);
@@ -124,10 +140,10 @@ export class Controller {
      * 
      * @returns {Server[]} - A list of host names corresponding to hosts which has more than 0GB RAM and that has been Nuked.
      */
-    getUsableHosts() {
-        const hostNames = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
-        const hackingHostNames = getHackingServerHostNames(this.#ns, hostNames);
-        return hackingHostNames;
+    getUsableServers() {
+        const servers = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
+        const hackingServers = getHackingServerHostNames(this.#ns, servers);
+        return hackingServers;
     }
 
     /**
@@ -149,70 +165,109 @@ export class Controller {
      * Runs the controller and starts making money.
      * 
      * @param {string | undefined} target - If given, overrides the automatich choosing of which host to attack.
+     * @returns
      */
     async run(target = undefined) {
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
-        const allHosts = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
-        const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.#ns, allHosts);
+        const allServers = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
+        const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.#ns, allServers);
         const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.#ns.hasRootAccess(host.hostName));
         if (hostsNotHacked.length > 0) hackHosts(this.#ns, hostsNotHacked);
         if (this.#debug) this.#logger.debug(`Number of hosts hacked and nuked: ${hostsNotHacked.length}`);
 
         // Chose an initial target host and prepare it.
-        let targetHost = target
+        let targetServer = target
             ? new Server(this.#ns, target)
             : new Server(this.#ns, this.player.getBestHostToAttack());
-        this.#logger.info(`Starting process of attacking ${targetHost.hostName}`);
-        await this.distributedPrepare(targetHost.hostName);
+        this.#logger.info(`Starting process of attacking ${targetServer.hostName}`);
+        await this.distributedPrepare(targetServer.hostName);
 
         while (true) {
             // Hack all the hosts which has not been hacked yet and that we are able to hack.
-            const allHosts = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
-            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.#ns, allHosts);
+            const allServers = getNetworkHostNames(this.#ns).map(h => new Server(this.#ns, h));
+            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.#ns, allServers);
             const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.#ns.hasRootAccess(host.hostName));
             if (hostsNotHacked.length > 0) hackHosts(this.#ns, hostsNotHacked);
             this.#logger.info(`Hosts not hacked: ${hostsNotHacked}`);
 
             if (!target) {
                 // Check if we need to switch to a new host and prepare the host if we do.
-                const newTargetHost = new Server(this.#ns, this.player.getBestHostToAttack());
+                const newTargetServer = new Server(this.#ns, this.player.getBestHostToAttack());
                 // We override this if we have set a host name to target as an argument.
-                if (newTargetHost.hostName != targetHost.hostName) {
-                    targetHost = newTargetHost;
-                    this.#logger.info(`New optimal host to attack found ${targetHost.hostName}.`);
+                if (newTargetServer.hostName != targetServer.hostName) {
+                    targetServer = newTargetServer;
+                    this.#logger.info(`New optimal host to attack found ${targetServer.hostName}.`);
                     // Prepare the host, so we can get the required information to enable us to do batching.
-                    await this.distributedPrepare(targetHost.hostName);
+                    await this.distributedPrepare(targetServer.hostName);
                 }
             }
 
             // Find a host that has enough RAM free to run a batch.
-            const hackingHosts = this.getUsableHosts();
-            this.#logger.info(`Hacking hosts length: ${hackingHosts}`);
-            const threads = targetHost.getHackThreads(this.hackPercentage);
-            this.#logger.info(`Threads: ${threads}`);
-            let batchTargethost = null;
-            for (const host of hackingHosts) {
-                // We want the free RAM to be bigger and not equal to give us some space to work within.
-                if (!batchTargethost && host.getAvailableRam() > threads.totalRequiredRam) {
-                    batchTargethost = host;
-                }
-                if (batchTargethost && host.getAvailableRam() > batchTargethost.getAvailableRam()) {
-                    batchTargethost = host;
-                }
+            const hackingServers = this.getUsableServers();
+            const threads = targetServer.getHackThreads(this.hackPercentage);
+            if (this.#debug) {
+                this.#logger.debug(`Hacking hosts length: ${hackingServers}`);
+                this.#logger.debug(`Threads: hack -> ${threads.hack}, weaken hack -> ${threads.weakenHack}, grow -> ${threads.grow}, weaken grow -> ${threads.weakenGrow}`);
             }
-            this.#logger.info(`Target batching host: ${batchTargethost}`);
 
-            if (batchTargethost) {
-                const delays = this.player.getDelay(targetHost.hostName);
+            const batchTargetServer = this.getBatchTargetServer(threads.totalRequiredRam, hackingServers);
+            if (batchTargetServer) {
+                if (this.#debug) this.#logger.debug(`Target batching host: ${batchTargetServer.hostName}`);
+                const delays = this.player.getDelay(targetServer.hostName);
 
-                const hackPid = this.#ns.exec(this.payloads.hackFileNameFull, batchTargethost.hostName, threads.hack, targetHost.hostName, delays.hack);
-                const hackWeakenPid = this.#ns.exec(this.payloads.weakenFileNameFull, batchTargethost.hostName, threads.weakenHack, targetHost.hostName, delays.weakenHack);
-                const growPid = this.#ns.exec(this.payloads.growFileNameFull, batchTargethost.hostName, threads.grow, targetHost.hostName, delays.grow);
-                const growWeakenPid = this.#ns.exec(this.payloads.weakenFileNameFull, batchTargethost.hostName, threads.weakenGrow, targetHost.hostName, delays.weakenGrow);
+                const hackPid = this.#ns.exec(this.payloads.hackFileNameFull, batchTargetServer.hostName, threads.hack, targetServer.hostName, delays.hack);
+                const hackWeakenPid = this.#ns.exec(this.payloads.weakenFileNameFull, batchTargetServer.hostName, threads.weakenHack, targetServer.hostName, delays.weakenHack);
+                const growPid = this.#ns.exec(this.payloads.growFileNameFull, batchTargetServer.hostName, threads.grow, targetServer.hostName, delays.grow);
+                const growWeakenPid = this.#ns.exec(this.payloads.weakenFileNameFull, batchTargetServer.hostName, threads.weakenGrow, targetServer.hostName, delays.weakenGrow);
 
                 if (hackPid == 0 || hackWeakenPid == 0 || growPid == 0 || growWeakenPid == 0) {
                     this.#ns.alert("Failed to start the individual batch file hack/weaken/grow/weaken maybe to RAM")
                     this.#ns.exit()
+                }
+            } else {
+                if (this.#debug) {
+                    this.#logger.warn("No servers available with more RAM than the batch requires. Splitting the batch up in individual stages.");
+                    this.#logger.debug(`Threads: Hack -> ${threads.hack}, weaken (hack) -> ${threads.weakenHack}, grow -> ${threads.grow}, weaken (grow) -> ${threads.weakenGrow}`);
+                }
+
+                if (threads.hack > 0) {
+                    const hackTargetServer = this.getBatchTargetServer(threads.hackRequiredRam, hackingServers);
+                    if (hackTargetServer !== undefined) {
+                        const pid = this.#ns.exec(this.payloads.hackFileNameFull, hackTargetServer.hostName, threads.hack, targetServer.hostName, 0);
+                        while (this.#ns.isRunning(pid, hackTargetServer?.hostName)) {
+                            await this.#ns.sleep(1000);
+                        }
+                    }
+                }
+
+                if (threads.weakenHack > 0) {
+                    const hackWeakenTargetServer = this.getBatchTargetServer(threads.weakenHackRequiredRam, hackingServers);
+                    if (hackWeakenTargetServer !== undefined) {
+                        const pid = this.#ns.exec(this.payloads.weakenFileNameFull, hackWeakenTargetServer.hostName, threads.weakenHack, targetServer.hostName, 0);
+                        while (this.#ns.isRunning(pid, hackWeakenTargetServer.hostName)) {
+                            await this.#ns.sleep(1000);
+                        }
+                    }
+                }
+
+                if (threads.grow > 0) {
+                    const growTargetServer = this.getBatchTargetServer(threads.growRequiredRam, hackingServers);
+                    if (growTargetServer !== undefined) {
+                        const pid = this.#ns.exec(this.payloads.growFileNameFull, growTargetServer.hostName, threads.grow, targetServer.hostName, 0);
+                        while (this.#ns.isRunning(pid, growTargetServer.hostName)) {
+                            await this.#ns.sleep(1000);
+                        }
+                    }
+                }
+
+                if (threads.weakenGrow > 0) {
+                    const growWeakenTargetServer = this.getBatchTargetServer(threads.weakenGrowRequiredRam, hackingServers);
+                    if (growWeakenTargetServer !== undefined) {
+                        const pid = this.#ns.exec(this.payloads.weakenFileNameFull, growWeakenTargetServer.hostName, threads.weakenGrow, targetServer.hostName, 0);
+                        while (this.#ns.isRunning(pid, growWeakenTargetServer.hostName)) {
+                            await this.#ns.sleep(1000);
+                        }
+                    }
                 }
             }
             await this.#ns.sleep(50);
