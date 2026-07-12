@@ -8,6 +8,8 @@ import { Logger } from "./logger";
  * @example const cloudServers = new CloudServers(ns, "SomeCoolName-");
  */
 export class CloudServers {
+    #logger;
+
     /**
      * @param {NS} ns             - Netscript context
      * @param {string} namePrefix - The name of the cloud servers with numbering postfixed to it.
@@ -26,7 +28,7 @@ export class CloudServers {
             524288, 1048576,
         ];
         this.maxServers = ns.cloud.getServerLimit();
-        this.logger = new Logger(ns);
+        this.#logger = new Logger(ns);
     }
 
     /**
@@ -39,7 +41,7 @@ export class CloudServers {
         if (this.ns.getServerMoneyAvailable(this.ns.getHostname()) > cost) {
             const hostName = this.namePrefix + this.ns.cloud.getServerNames().length;
             this.ns.cloud.purchaseServer(hostName, this.ramTiers[0]);
-            this.logger.write(this.logger.INFO, `Bought new server ${hostName} with ${this.ramTiers[0]}GB`);
+            this.#logger.info(`Bought new server ${hostName} with ${this.ramTiers[0]}GB`);
         }
     }
 
@@ -85,6 +87,7 @@ export class CloudServers {
      * Upgrades the host matching hostName if there is a next tier
      * 
      * @param {string} hostName - The host name of the cloud server to upgrade
+     * @returns {boolean}       - Returns false if the server cannot be upgraded, else true
      */
     upgradeServer(hostName) {
         // Checking if there is a next tier
@@ -96,13 +99,14 @@ export class CloudServers {
         // We could compare ramTier with ns.getRamLimit() also, but
         // I don't see a reason for doing this since I allready
         // have the same end result with nextRamTier.
-        if (!nextRamTier) return 0;
+        if (!nextRamTier) return false;
 
         // We check the cost of the next tier, and if we can afford it, we upgrade the server.
         const cost = this.ns.cloud.getServerUpgradeCost(hostName, nextRamTier);
         if (this.ns.getServerMoneyAvailable(this.ns.getHostname()) > cost) {
             this.ns.cloud.upgradeServer(hostName, nextRamTier);
-            this.logger.write(this.logger.INFO, `Upgraded RAM on ${hostName} from ${this.ns.format.ram(ramTier, 2)} to ${this.ns.format.ram(nextRamTier, 2)}`);
+            this.#logger.info(`Upgraded RAM on ${hostName} from ${this.ns.format.ram(ramTier, 2)} to ${this.ns.format.ram(nextRamTier, 2)}`);
         }
+        return true;
     }
 }

@@ -33,10 +33,10 @@ export async function main(ns) {
     const controller = new Controller(ns);
 
     if (flags.help) {
-        logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} <TARGET HOST | Optional> --help`)
-        logger.write(logger.INFO, "\t<TARGET HOST> is optional. With it, no automatic target picking is done,");
-        logger.write(logger.INFO, "\t              without it, the controller chooses the target itself.")
-        logger.write(logger.INFO, "\t--help -> Shows this message.");
+        logger.info(`Usage: run ${ns.getScriptName()} <TARGET HOST | Optional> --help`)
+        logger.info("\t<TARGET HOST> is optional. With it, no automatic target picking is done,");
+        logger.info("\t              without it, the controller chooses the target itself.")
+        logger.info("\t--help -> Shows this message.");
         return;
     }
     await controller.run(targetHost);

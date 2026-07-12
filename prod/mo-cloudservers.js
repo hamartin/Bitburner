@@ -22,8 +22,8 @@ export async function main(ns) {
     const logger = new Logger(ns);
 
     if (flags.help) {
-        logger.write(logger.INFO, `Usage: run ${ns.getScriptName()} --sleepTime <TIME>`);
-        logger.write(logger.INFO, "\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
+        logger.info(`Usage: run ${ns.getScriptName()} --sleepTime <TIME>`);
+        logger.info("\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.");
         return;
     }
 
@@ -37,9 +37,11 @@ export async function main(ns) {
             for (const host of boughtServers) {
                 if (ns.getServerMaxRam(host) < ns.getServerMaxRam(smallest)) smallest = host;
             }
-            cloudServers.upgradeServer(smallest);
+            if (!cloudServers.upgradeServer(smallest)) {
+                break;
+            }
         }
         await ns.sleep(flags.sleepTime);
     }
-    logger.write(logger.INFO, "All purchased servers are maxed out. Exiting script.");
+    logger.info("All purchased servers are maxed out. Exiting script.");
 }

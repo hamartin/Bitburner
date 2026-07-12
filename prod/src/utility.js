@@ -137,10 +137,10 @@ export function hackHosts(ns, hosts) {
                     ns.sqlinject(host.hostName);
                     break;
             }
-            logger.write(logger.SUCCESS, `Executed ${programName} on ${host.hostName}`);
+            logger.success(`Executed ${programName} on ${host.hostName}`);
         }
         ns.nuke(host.hostName);
-        logger.write(logger.SUCCESS, `Nuked ${host}`);
+        logger.success(`Nuked ${host}`);
     }
 }
 

@@ -70,7 +70,7 @@ export class Controller {
      * @returns
      */
     async distributedPrepare(targetHostName) {
-        this.#logger.write(this.#logger.INFO, `Starting to prepare the target host (${targetHostName}) for batching.`);
+        this.#logger.info(`Starting to prepare the target host (${targetHostName}) for batching.`);
         while (true) {
             const servers = this.getUsableHosts();
 
@@ -80,7 +80,7 @@ export class Controller {
             const growStatus = targetHost.getGrowStatus();
 
             if (weakenStatus <= 0 && growStatus <= 0) {
-                this.#logger.write(this.#logger.INFO, `Done with preparing the target host (${targetHost}).`);
+                this.#logger.info(`Done with preparing the target host (${targetHost}).`);
                 return
             }
 
@@ -141,20 +141,22 @@ export class Controller {
 
     /**
      * 
-     * @param {String | undefined} target
+     * @param {string | undefined} target - If given, overrides the automatich choosing of which host to attack.
+     * @param {boolean} [debug=false]     - Write verbose debugging to screen if true.
      */
-    async run(target = undefined) {
+    async run(target = undefined, debug = false) {
         // Hack all the hosts which has not been hacked yet and that we are able to hack.
         const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
         const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
         const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
         if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
+        if (debug) this.#logger.debug(`Number of hosts hacked and nuked: ${hostsNotHacked.length}`);
 
         // Chose an initial target host and prepare it.
         let targetHost = target
             ? new Server(this.ns, target)
             : new Server(this.ns, this.player.getBestHostToAttack());
-        this.#logger.write(this.#logger.INFO, `Starting process of attacking ${targetHost.hostName}`);
+        this.#logger.info(`Starting process of attacking ${targetHost.hostName}`);
         await this.distributedPrepare(targetHost.hostName);
 
         while (true) {
@@ -163,6 +165,7 @@ export class Controller {
             const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
             const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
             if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
+            this.#logger.info(`Hosts not hacked: ${hostsNotHacked}`);
 
             if (!target) {
                 // Check if we need to switch to a new host and prepare the host if we do.
@@ -170,7 +173,7 @@ export class Controller {
                 // We override this if we have set a host name to target as an argument.
                 if (newTargetHost.hostName != targetHost.hostName) {
                     targetHost = newTargetHost;
-                    this.#logger.write(this.#logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
+                    this.#logger.info(`New optimal host to attack found ${targetHost.hostName}.`);
                     // Prepare the host, so we can get the required information to enable us to do batching.
                     await this.distributedPrepare(targetHost.hostName);
                 }
@@ -178,7 +181,9 @@ export class Controller {
 
             // Find a host that has enough RAM free to run a batch.
             const hackingHosts = this.getUsableHosts();
+            this.#logger.info(`Hacking hosts length: ${hackingHosts}`);
             const threads = targetHost.getHackThreads(this.hackPercentage);
+            this.#logger.info(`Threads: ${threads}`);
             let batchTargethost = null;
             for (const host of hackingHosts) {
                 // We want the free RAM to be bigger and not equal to give us some space to work within.
@@ -189,6 +194,7 @@ export class Controller {
                     batchTargethost = host;
                 }
             }
+            this.#logger.info(`Target batching host: ${batchTargethost}`);
 
             if (batchTargethost) {
                 const delays = this.player.getDelay(targetHost.hostName);
@@ -203,7 +209,7 @@ export class Controller {
                     this.ns.exit()
                 }
             }
-            await this.ns.sleep(10);
+            await this.ns.sleep(1000);
         }
     }
 }

@@ -81,7 +81,7 @@ export async function main(ns) {
         let hackingServers = newHackingServers;
         const targetHost = player.getBestHostToAttack();
         if (targetHost != previousTargetHost) {
-            logger.write(logger.INFO, `Changing target host from ${previousTargetHost} to ${targetHost}`);
+            logger.info(`Changing target host from ${previousTargetHost} to ${targetHost}`);
             hackingServers = currentHackingServers;
             previousTargetHost = targetHost;
         }
@@ -109,7 +109,7 @@ export async function main(ns) {
             await ns.scp(payloads.hackFileNameFull, host);
             await ns.scp(payloads.growFileNameFull, host);
             await ns.scp(payloads.weakenFileNameFull, host);
-            logger.write(logger.INFO, `Copied all payload files to ${targetHost}.`);
+            logger.info(`Copied all payload files to ${targetHost}.`);
             killAllProcessesAndRunScript(ns, logger, host, targetHost, payloads.allFileNameFull);
 
             // New cloud server. We need to get the RAM size and store it to the
@@ -123,7 +123,7 @@ export async function main(ns) {
 
             if (previousRam === undefined || previousRam !== currentRam) {
                 knownCloudServersRam.set(currentCloudServer, currentRam);
-                logger.write(logger.INFO, `Cloudserver ${currentCloudServer} has increased its RAM. Restarting all scripts.`);
+                logger.info(`Cloudserver ${currentCloudServer} has increased its RAM. Restarting all scripts.`);
                 killAllProcessesAndRunScript(ns, logger, currentCloudServer, targetHost, payloads.allFileNameFull);
             }
         }
