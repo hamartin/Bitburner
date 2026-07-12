@@ -8,6 +8,8 @@ import { Payloads } from "./payloads.js";
  * @example const server = new Server(ns, "n00dles");
  */
 export class Server {
+    #logger;
+
     /**
      * @param {NS} ns             - Netscript context
      * @param {string} hostName   - The server host name
@@ -17,7 +19,7 @@ export class Server {
         this.ns = ns;
         this.hostName = hostName;
         this.payloads = new Payloads(ns);
-        this.logger = new Logger(ns);
+        this.#logger = new Logger(ns);
         this.stats = ns.getServer(hostName);
     }
 
@@ -111,8 +113,8 @@ export class Server {
         const growMem = this.payloads.getRamRequirements(this.payloads.growFileNameFull);
         const weakenMem = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull);
 
-        this.logger.write(this.logger.INFO, `Starting to prepare host ${this.hostName}.`);
-        this.logger.write(this.logger.INFO, `This might take some time. You can see the progress doing > run ./utilities/monitor.js ${this.hostName}`);
+        this.#logger.write(this.#logger.INFO, `Starting to prepare host ${this.hostName}.`);
+        this.#logger.write(this.#logger.INFO, `This might take some time. You can see the progress doing > run ./utilities/monitor.js ${this.hostName}`);
         while (true) {
             const freeMem = this.ns.getServerMaxRam(this.ns.getHostname()) - this.ns.getServerUsedRam(this.ns.getHostname());
             // Checking if the host is at minimum security level, if not we weaken it.
@@ -145,7 +147,7 @@ export class Server {
             if (this.ns.getServerSecurityLevel(this.hostName) <= this.ns.getServerMinSecurityLevel(this.hostName) 
                 && this.ns.getServerMoneyAvailable(this.hostName) >= this.ns.getServerMaxMoney(this.hostName)
             ) {
-                this.logger.write(this.logger.INFO, `Finished preparing host ${this.hostName}.`);
+                this.#logger.write(this.#logger.INFO, `Finished preparing host ${this.hostName}.`);
                 break;
             }
 

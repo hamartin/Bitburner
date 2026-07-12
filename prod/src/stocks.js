@@ -7,6 +7,8 @@ import { Logger } from "./logger";
  * @example const trader = new StockTrader(ns);
  */
 export class StockTrader {
+    #logger;
+
     /**
      * @param {NS} ns - Netscript context
      * @example const trader = new StockTrader(ns);
@@ -17,7 +19,7 @@ export class StockTrader {
         this.openLongThreshold = .55;
         this.closeLongThreshold = .50;
 
-        this.logger = new Logger(ns);
+        this.#logger = new Logger(ns);
     }
 
     /**
@@ -46,16 +48,16 @@ export class StockTrader {
                 const cost = availableShares * price;
                 if (cost < availableCash) {
                     const avgOpenPrice = this.ns.stock.buyStock(symbol, availableShares);
-                    this.logger.write(this.logger.INFO, `Bought ${availableShares} shares for ${this.ns.format.number(avgOpenPrice, 2)} per share in ${symbol}`);
+                    this.#logger.write(this.#logger.INFO, `Bought ${availableShares} shares for ${this.ns.format.number(avgOpenPrice, 2)} per share in ${symbol}`);
                 }
             // The forecast tells us to sell our inventory for the stock.
             } else if (forecast <= closeLongThreshold && myShares > 0) {
                 const avgClosePrice = this.ns.stock.sellStock(symbol, myShares);
                 const profit = (avgClosePrice - avgMySharePrice) * myShares - this.commissionFee;
                 if (profit > 0) {
-                    this.logger.write(this.logger.SUCCESS, `Closed ${myShares} shares in ${symbol} with a profit of ${this.ns.format.number(profit, 2)}`);
+                    this.#logger.write(this.#logger.SUCCESS, `Closed ${myShares} shares in ${symbol} with a profit of ${this.ns.format.number(profit, 2)}`);
                 } else {
-                    this.logger.write(this.logger.WARN, `Closed ${myShares} shares in ${symbol} with a loss of ${this.ns.format.number(profit, 2)}`);
+                    this.#logger.write(this.#logger.WARN, `Closed ${myShares} shares in ${symbol} with a loss of ${this.ns.format.number(profit, 2)}`);
                 }
             }
         }

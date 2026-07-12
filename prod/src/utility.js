@@ -57,7 +57,7 @@ export function getHostsThatCanBeHacked(ns, hosts) {
     const hostsThatCanBeHacked = [];
     for (const host of hosts) {
         const numbOpenPortsRequired = host.stats.numOpenPortsRequired === undefined
-            ? 5
+            ? 0
             : host.stats.numOpenPortsRequired;
         if (numbOpenPortsRequired > numberOfCrackingPrograms) {
             continue;

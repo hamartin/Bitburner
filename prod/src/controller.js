@@ -17,6 +17,8 @@ import {
  * @example const controller = new Constroller(ns, .01);
  */
 export class Controller {
+    #logger;
+
     /**
      * @param {NS} ns                      - Netscript context
      * @param {number} [hackPercentage=.1] - How much of the total money on a host we should hack per batch.
@@ -25,7 +27,7 @@ export class Controller {
     constructor (ns, hackPercentage = .1) {
         this.ns = ns;
         this.hackPercentage = hackPercentage;
-        this.logger = new Logger(ns);
+        this.#logger = new Logger(ns);
         this.payloads = new Payloads(ns);
         this.player = new MyPlayer(ns);
     }
@@ -68,7 +70,7 @@ export class Controller {
      * @returns
      */
     async distributedPrepare(targetHostName) {
-        this.logger.write(this.logger.INFO, `Starting to prepare the target host (${targetHostName}) for batching.`);
+        this.#logger.write(this.#logger.INFO, `Starting to prepare the target host (${targetHostName}) for batching.`);
         while (true) {
             const servers = this.getUsableHosts();
 
@@ -78,7 +80,7 @@ export class Controller {
             const growStatus = targetHost.getGrowStatus();
 
             if (weakenStatus <= 0 && growStatus <= 0) {
-                this.logger.write(this.logger.INFO, `Done with preparing the target host (${targetHost}).`);
+                this.#logger.write(this.#logger.INFO, `Done with preparing the target host (${targetHost}).`);
                 return
             }
 
@@ -142,34 +144,37 @@ export class Controller {
      * @param {String | undefined} target
      */
     async run(target = undefined) {
+        // Hack all the hosts which has not been hacked yet and that we are able to hack.
+        const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
+        const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
+        const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
+        if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
+
         // Chose an initial target host and prepare it.
-        let targetHost;
-        if (target) {
-            targetHost = new Server(this.ns, target);
-        } else {
-            targetHost = new Server(this.ns, this.player.getBestHostToAttack());
-        }
-        this.logger.write(this.logger.INFO, `Starting process of attacking ${targetHost.hostName}`);
+        let targetHost = target
+            ? new Server(this.ns, target)
+            : new Server(this.ns, this.player.getBestHostToAttack());
+        this.#logger.write(this.#logger.INFO, `Starting process of attacking ${targetHost.hostName}`);
         await this.distributedPrepare(targetHost.hostName);
 
         while (true) {
+            // Hack all the hosts which has not been hacked yet and that we are able to hack.
+            const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
+            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
+            const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
+            if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
+
             if (!target) {
                 // Check if we need to switch to a new host and prepare the host if we do.
                 const newTargetHost = new Server(this.ns, this.player.getBestHostToAttack());
                 // We override this if we have set a host name to target as an argument.
                 if (newTargetHost.hostName != targetHost.hostName) {
                     targetHost = newTargetHost;
-                    this.logger.write(this.logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
+                    this.#logger.write(this.#logger.INFO, `New optimal host to attack found ${targetHost.hostName}.`);
                     // Prepare the host, so we can get the required information to enable us to do batching.
                     await this.distributedPrepare(targetHost.hostName);
                 }
             }
-
-            // Hack all the hosts which has not been hacked yet and that we are able to hack.
-            const allHosts = getNetworkHostNames(this.ns).map(h => new Server(this.ns, h));
-            const hostsThatCanBeHacked = getHostsThatCanBeHacked(this.ns, allHosts);
-            const hostsNotHacked = hostsThatCanBeHacked.filter(host => !this.ns.hasRootAccess(host.hostName));
-            if (hostsNotHacked.length > 0) hackHosts(this.ns, hostsNotHacked);
 
             // Find a host that has enough RAM free to run a batch.
             const hackingHosts = this.getUsableHosts();
