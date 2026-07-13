@@ -1,3 +1,4 @@
+/*
 /**
  * @typedef {Object} Threads
  * @property {number} hack
@@ -11,6 +12,7 @@
  * @property {number} total
  * @property {number} totalRequiredRam
  */
+*/
 
 /**
  * @typedef {Object} AttackTimes
