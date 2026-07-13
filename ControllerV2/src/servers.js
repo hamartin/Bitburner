@@ -1,4 +1,4 @@
-import { Threads } from "./threads";
+import { Threads } from "./threads"
 
 
 /**
@@ -10,38 +10,39 @@ import { Threads } from "./threads";
  * @returns {HostName_s | null}     - Returns the host name of the best server. If no best server found, null.
  */
 function getBestServer(hostsInfo) {
-    let bestHost = null;
-    let bestThreads = -Infinity;
+    let bestHost = null
+    let bestThreads = -Infinity
 
     for (const [host, info] of hostsInfo) {
-        if (info.threads > bestThreads
+        if (info.threads
+            && info.threads > bestThreads
             && info.stats.hasAdminRights == true
         ) {
-            bestThreads = info.threads;
-            bestHost = host;
+            bestThreads = info.threads
+            bestHost = host
         }
     }
 
-    return bestHost;
+    return bestHost
 }
 
 /**
  * Returns a mapping between host names and a set of information.
  * 
- * @param {NS} ns                    - Netscript context 
- * @param {HostNames_l} hostNames    - List of host names
- * @param {Script} script            - The script to calculate threads for
- * @param {number} [minVacantRam=32] - The minimum amount of RAM we want available on "home" at any given time
+ * @param {NS} ns                     - Netscript context 
+ * @param {HostNames_l} hostNames     - List of host names
+ * @param {Script | undefined} script - The script to calculate threads for
+ * @param {number} [minVacantRam=32]  - The minimum amount of RAM we want available on "home" at any given time
  * @param {number} [minMaxRam=128]    - The minimum max RAM "home" can have before we start overriding used RAM
  * @returns {ServersInfo_m}
  */
-export function getServersInfo(ns, hostNames, script, minVacantRam = 32, minMaxRam = 128) {
-    const threads = new Threads(ns);
+export function getServersInfo(ns, hostNames, script  = undefined, minVacantRam = 32, minMaxRam = 128) {
+    const threads = new Threads(ns)
 
     return new Map(
         hostNames.map(hostName => {
             // Clone the server stats so qw don't mutate Bitburner's internal object
-            const stats = { ...ns.getServer(hostName) };
+            const stats = { ...ns.getServer(hostName) }
 
             // I want to make sure there is always a minimum of 32GB of vacant
             // RAM on the home server so that I can run things like utility
@@ -53,11 +54,13 @@ export function getServersInfo(ns, hostNames, script, minVacantRam = 32, minMaxR
             }
 
             return [hostName, {
-                threads: threads.getNumberOfThreadsAHostCanRun(stats, script.requiredRam),
+                ...(script && {
+                    threads: threads.getNumberOfThreadsAHostCanRun(stats, script.requiredRam)
+                }),
                 stats,
-            }];
+            }]
         })
-    );
+    )
 }
 
 /**

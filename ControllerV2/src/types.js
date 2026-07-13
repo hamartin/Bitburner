@@ -7,13 +7,9 @@
  */
 
 /**
- * @typedef {Object} HostInfo_o
- * @property {number} threads
- * @property {Server} stats
- */
-
-/**
- * @typedef {Map<HostName_s, HostInfo_o>} ServersInfo_m
+ * @typedef {Object} ServerInfo_o
+ * @property {Server} stats       - Required
+ * @property {number=} threads    - Optional
  */
 
 /**
@@ -46,6 +42,10 @@
 
 /**
  * @typedef {Script[]} Scripts
+ */
+
+/**
+ * @typedef {Map<HostName_s, ServerInfo_o>} ServersInfo_m
  */
 
 /**

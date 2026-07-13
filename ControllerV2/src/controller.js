@@ -19,36 +19,72 @@ export class Controller {
 
     /**
      * @param {NS} ns                     - Netscript context 
-     * @param {HostName_s} targetHostName - Host name of the host to drain
      */
-    constructor(ns, targetHostName) {
+    constructor(ns) {
         this.#ns = ns
         this.#network = new Network(ns)
         this.#script = new Script(ns, "payload.js")
-
-        this.targetHostname = targetHostName
+        this.targetHostName = "n00dles"
     }
 
     toString() {
-        return `Controller(${this.#ns}, ${this.targetHostname})`
+        return `Controller(${this.#ns}, ${this.targetHostName})`
+    }
+
+    /**
+     * @param {HostNames_l} hostNames      - A list of host names found on the network
+     * @param {number} [difficultyScale=3] - A host must be difficultyScale times smaller than player to be available for attacking
+     * @returns {HostName_s}              - A list of host names sorted by the degree which it is most proffitable to attack. Index 0 being the most proffitable.
+     */
+    getBestHostsToAttack(hostNames, difficultyScale = 3) {
+        const serversInfo = getServersInfo(this.#ns, hostNames)
+        const myHackLevel = this.#ns.getHackingLevel()
+        
+        const hackAble = new Map(
+            [...serversInfo].filter(([_, info]) =>
+                info.stats.hasAdminRights &&
+                (info.stats.hackDifficulty ?? Infinity) <= myHackLevel / difficultyScale
+        ))
+
+        let best = null
+        let bestScore = -Infinity
+        for (const [hostName, info] of hackAble) {
+            // We don't know how much money the host has or it cannot have any money
+            // at all. Skip the host if so.
+            const maxMoney = info.stats.moneyMax
+            if (!maxMoney || maxMoney <= 0) continue
+
+            const hackPercent = this.#ns.hackAnalyze(hostName)
+            const hackTime = this.#ns.getHackTime(hostName)
+            const growth = this.#ns.getGrowTime(hostName)
+            const score = (maxMoney * hackPercent * growth) / hackTime
+
+            if (score > bestScore) {
+                bestScore = score
+                best = hostName
+            }
+        }
+        // If no best host can be found, we return the easiest host to attack in
+        // the game.
+        return best ?? this.targetHostName
     }
 
     async run() {
         while (true) {
             const hostNames = this.#network.getRootedHostNames()
-
+            const targetHostName = this.getBestHostsToAttack(hostNames)
             // We get information about all the hosts we found and reduce the number
             // of hosts to only those that has reported they can run 1 or more
             // threads.
             const serversInfo = getServersInfo(this.#ns, hostNames, this.#script)
             /** @type {ServersInfo_m} */
             const serversWithThreads = new Map(
-                [...serversInfo].filter(([_, info]) => info.threads >= 1)
-            );
+                [...serversInfo].filter(([_, info]) => info.threads && info.threads >= 1)
+            )
 
-            runOnBestServer(serversWithThreads, this.#script, this.targetHostname)
+            runOnBestServer(serversWithThreads, this.#script, targetHostName)
             await this.#ns.sleep(200)
-            // TODO: Vi må finne ut av bestTarget, regne ut batch sizes og finne ut
+            // TODO: regne ut batch sizes og finne ut
             // av hvordan vi holder styr på hvilke hoster som skal ha hva slags type
             // threads/batches osv.
         }
@@ -63,6 +99,6 @@ export class Controller {
  * @param {NS} ns - Netscript context
  */
 export async function main(ns) {
-    const controller = new Controller(ns, "phantasy")
+    const controller = new Controller(ns)
     await controller.run()
 }
