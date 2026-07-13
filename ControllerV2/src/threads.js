@@ -20,13 +20,13 @@ export class Threads {
      * Returns the number of threads a host can run given the script it will run
      * needs ramNeeded amount of RAM per thread.
      * 
-     * @param {HostName_s} hostName 
-     * @param {RAM_n} ramNeeded 
-     * @returns {Threads_n}
-     * @example const newThreads = threads.getNumberOfThreadsAHostCanRun("n00dles", 1.7)
+     * @param {Server} stats    - Server information -> ns.getServer(<hostname>)
+     * @param {RAM_n} ramNeeded - The amount of RAM we need for each thread
+     * @returns {Threads_n}     - The number of threads we can run given ramNeeded
+     * @example const newThreads = threads.getNumberOfThreadsAHostCanRun(ns.getServer("n00dles"), 1.7)
      */
-    getNumberOfThreadsAHostCanRun(hostName, ramNeeded) {
-        const freeRam = this.#ns.getServerMaxRam(hostName) - this.#ns.getServerUsedRam(hostName)
+    getNumberOfThreadsAHostCanRun(stats, ramNeeded) {
+        const freeRam = stats.maxRam - stats.ramUsed
         return Math.floor(freeRam/ramNeeded)
     }
 
@@ -36,11 +36,12 @@ export class Threads {
      * getNumberOfThreadsAHostCanRun, but I assume the ramNeeded argument will
      * in general be bigger numbers.
      * 
-     * @param {HostName_s} hostName 
-     * @param {RAM_n} ramNeeded 
-     * @returns {Batches_n}
+     * @param {Server} stats    - Server information -> ns.getServer(<hostname>)
+     * @param {RAM_n} ramNeeded - The amount of RAM we need for each batch
+     * @returns {Batches_n}     - The number of batches we can run given ramNeeded
+     * @example const newBatches = threads.getNumberOfBatchesAHostCanRun(ns.getServer("n00dles", 64.3))
      */
-    getNumberOfBatchesAHostCanRun(hostName, ramNeeded) {
-        return this.getNumberOfThreadsAHostCanRun(hostName, ramNeeded)
+    getNumberOfBatchesAHostCanRun(stats, ramNeeded) {
+        return this.getNumberOfThreadsAHostCanRun(stats, ramNeeded)
     }
 }
