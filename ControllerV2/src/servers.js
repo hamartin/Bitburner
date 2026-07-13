@@ -15,20 +15,20 @@ export function getServersInfo(ns, hostNames, script, minVacantRam = 32, minMaxR
     const threads = new Threads(ns);
 
     return new Map(
-        hostNames.map(h => {
+        hostNames.map(hostName => {
             // Clone the server stats so qw don't mutate Bitburner's internal object
-            const stats = { ...ns.getServer(h) };
+            const stats = { ...ns.getServer(hostName) };
 
             // I want to make sure there is always a minimum of 32GB of vacant
             // RAM on the home server so that I can run things like utility
             // scripts etc. But I only want to do this if I have a lot of RAM
             // simply because in the beginning, you have very little resources
             // to use for hacking.
-            if (if h === "home" && stats.maxRam > minMaxRam) {
+            if (hostName === "home" && stats.maxRam > minMaxRam) {
                 stats.ramUsed += minVacantRam
             }
 
-            return [h, {
+            return [hostName, {
                 threads: threads.getNumberOfThreadsAHostCanRun(stats, script.requiredRam),
                 stats,
             }];
