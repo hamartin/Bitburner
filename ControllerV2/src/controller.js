@@ -15,7 +15,10 @@ export class Controller {
     // Private members
     #ns
     #network
-    #script
+    #scriptPayload
+    #scriptHack
+    #scriptGrow
+    #scriptWeaken
 
     /**
      * @param {NS} ns                     - Netscript context 
@@ -23,7 +26,11 @@ export class Controller {
     constructor(ns) {
         this.#ns = ns
         this.#network = new Network(ns)
-        this.#script = new Script(ns, "payload.js")
+        this.#scriptPayload = new Script(ns, "payload.js")
+        this.#scriptHack = new Script(ns, "hack.js")
+        this.#scriptGrow = new Script(ns, "grow.js")
+        this.#scriptWeaken = new Script(ns, "weaken.js")
+
         this.targetHostName = "n00dles"
     }
 
@@ -69,24 +76,44 @@ export class Controller {
         return best ?? this.targetHostName
     }
 
-    async run() {
+    /**
+     * Runs the simple early game hack algorithm on all hosts available to run
+     * the script. The target host is automatically chosen.
+     */
+    async runEGH() {
         while (true) {
             const hostNames = this.#network.getRootedHostNames()
             const targetHostName = this.getBestHostsToAttack(hostNames)
             // We get information about all the hosts we found and reduce the number
             // of hosts to only those that has reported they can run 1 or more
             // threads.
-            const serversInfo = getServersInfo(this.#ns, hostNames, this.#script)
+            const serversInfo = getServersInfo(this.#ns, hostNames, this.#scriptPayload)
             /** @type {ServersInfo_m} */
             const serversWithThreads = new Map(
                 [...serversInfo].filter(([_, info]) => info.threads && info.threads >= 1)
             )
 
-            runOnBestServer(serversWithThreads, this.#script, targetHostName)
+            runOnBestServer(serversWithThreads, this.#scriptPayload, targetHostName)
             await this.#ns.sleep(200)
             // TODO: regne ut batch sizes og finne ut
             // av hvordan vi holder styr på hvilke hoster som skal ha hva slags type
             // threads/batches osv.
+        }
+    }
+
+    /**
+     * Runs a batching algorithm which times when the 4 stages of hack, weaken
+     * hack, grow and weaken grow. The attacking host is chosen based on if it
+     * can fit all 4 stages or 1 or more stages in RAM.
+     */
+    async runBatching() {
+        while (true) {
+            const hostNames = this.#network.getRootedHostNames()
+            const targetHostName = this.getBestHostsToAttack(hostNames)
+            // We get information about all the hosts we found and reduce the number
+            // of hosts to only those that has reported they can run 1 or more
+            // threads.
+            const serversInfo = getServersInfo(this.#ns, hostNames, this.#scriptPayload)
         }
     }
 }
@@ -100,5 +127,5 @@ export class Controller {
  */
 export async function main(ns) {
     const controller = new Controller(ns)
-    await controller.run()
+    await controller.runEGH()
 }
