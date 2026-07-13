@@ -19,3 +19,13 @@ export async function main(ns) {
         : Number(ns.args[1])
     await ns.grow(targetHost, {additionalMsec: delay})
 }
+
+/**
+ *  Autocomplete only works for the first argument.
+ */
+export function autocomplete(data, args) {
+    if (args.length === 1) {
+        return data.servers
+    }
+    return []
+}
