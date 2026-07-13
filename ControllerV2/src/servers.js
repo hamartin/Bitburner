@@ -24,7 +24,7 @@ export function getServersInfo(ns, hostNames, script, minVacantRam = 32, minMaxR
             // scripts etc. But I only want to do this if I have a lot of RAM
             // simply because in the beginning, you have very little resources
             // to use for hacking.
-            if (stats.maxRam > minMaxRam) {
+            if (if h === "home" && stats.maxRam > minMaxRam) {
                 stats.ramUsed += minVacantRam
             }
 
