@@ -1,9 +1,16 @@
 import { Network } from "./network"
 import { Script } from "./script"
 
-import { getServersInfo } from "./servers"
+import {
+    getServersInfo,
+    runOnBestServer
+} from "./servers"
 
 
+/**
+ * This class controlls batching out hack, weaken, grow, weaken stages on the
+ * target server calculated to be best to attack.
+ */
 export class Controller {
     // Private members
     #ns
@@ -20,6 +27,10 @@ export class Controller {
         this.#script = new Script(ns, "payload.js")
 
         this.targetHostname = targetHostName
+    }
+
+    toString() {
+        return `Controller(${this.#ns}, ${this.targetHostname})`
     }
 
     async run() {
@@ -42,47 +53,6 @@ export class Controller {
             // threads/batches osv.
         }
     }
-}
-
-/**
- * 
- * @param {ServersInfo_m} hostsInfo - A map with host name as key and HostInfo_o as value.
- * @returns {HostName_s | null}
- */
-function getBestServer(hostsInfo) {
-    let bestHost = null;
-    let bestThreads = -Infinity;
-
-    for (const [host, info] of hostsInfo) {
-        if (info.threads > bestThreads
-            && info.stats.hasAdminRights == true
-        ) {
-            bestThreads = info.threads;
-            bestHost = host;
-        }
-    }
-
-    return bestHost;
-}
-
-/**
- * Finds the best server to run the script on, then gets the number of threads
- * it can run and then runs the script itself.
- * 
- * @param {ServersInfo_m} serverWithThreads - Map of hosts and their stats
- * @param {Script} script                   - The script object to run the code for
- * @param  {...string} args                 - Any additional arguments to be passed to ns.exec
- */
-function runOnBestServer(serverWithThreads, script, ...args) {
-    /** @type {HostName_s | null} */
-    const best = getBestServer(serverWithThreads)
-    if (!best) return
-
-    /** @type {Threads_n | undefined} */
-    const threads = serverWithThreads.get(best)?.threads
-    if (!threads) return
-
-    script.runScriptOnServer(best, threads, ...args)
 }
 
 /**

@@ -16,6 +16,10 @@ export class Network {
         this.#ns = ns
     }
 
+    toString() {
+        return `Network(${this.#ns})`
+    }
+
     /**
      * The method will start initially at the host which the script is
      * run on and scan all servers in the network, returning a list of

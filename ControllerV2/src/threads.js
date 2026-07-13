@@ -16,6 +16,10 @@ export class Threads {
         this.#ns = ns
     }
 
+    toString() {
+        return `Threads(${this.#ns})`
+    }
+
     /**
      * Returns the number of threads a host can run given the script it will run
      * needs ramNeeded amount of RAM per thread.

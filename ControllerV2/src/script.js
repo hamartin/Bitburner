@@ -33,7 +33,11 @@ export class Script {
             ns.exit()
         }
         /** @type {RAM_n} */
-        this.requiredRam = ns.getScriptRam(`${this.pathAndFileName}`);
+        this.requiredRam = ns.getScriptRam(`${this.pathAndFileName}`)
+    }
+
+    toString() {
+        return `Script(${this.#ns}, ${this.#fileName}, ${this.#path})`
     }
 
     /**
