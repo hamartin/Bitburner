@@ -1,5 +1,5 @@
-import { Controller } from "./src/controller";
-import { Logger } from "./src/logger";
+import { Controller } from "./src/controller"
+import { Logger } from "./src/logger"
 
 
 /**
@@ -24,23 +24,23 @@ export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["help", false],
         ["debug", false],
-    ]));
-    const targetHost = flags._[0];
+    ]))
+    const targetHost = flags._[0]
 
     // We prepare the logging.
-    ns.ui.openTail();
-    ns.disableLog("ALL");
-    ns.clearLog();
+    ns.ui.openTail()
+    ns.disableLog("ALL")
+    ns.clearLog()
 
-    const logger = new Logger(ns);
-    const controller = new Controller(ns, false);
+    const logger = new Logger(ns)
+    const controller = new Controller(ns, false)
 
     if (flags.help) {
         logger.info(`Usage: run ${ns.getScriptName()} <TARGET HOST | Optional> --help`)
-        logger.info("\t<TARGET HOST> is optional. With it, no automatic target picking is done,");
+        logger.info("\t<TARGET HOST> is optional. With it, no automatic target picking is done,")
         logger.info("\t              without it, the controller chooses the target itself.")
-        logger.info("\t--help -> Shows this message.");
-        return;
+        logger.info("\t--help -> Shows this message.")
+        return
     }
-    await controller.run(targetHost);
+    await controller.run(targetHost)
 }

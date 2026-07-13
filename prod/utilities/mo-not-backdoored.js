@@ -1,4 +1,4 @@
-import { Logger } from "../src/logger";
+import { Logger } from "../src/logger"
 
 //
 // This whole file is created by Copilot in pure vibecoding. I originally had a
@@ -17,28 +17,28 @@ import { Logger } from "../src/logger";
  */
 export async function main(ns) {
     // We prepare the logging.
-    ns.ui.openTail();
-    ns.disableLog('ALL');
-    ns.clearLog();
+    ns.ui.openTail()
+    ns.disableLog('ALL')
+    ns.clearLog()
 
-    const logger = new Logger(ns);
+    const logger = new Logger(ns)
 
-    const hackingLevel = ns.getHackingLevel();
-    const tree = await buildTree(ns, "home");
-    const pending = [];
-    collectPending(tree, ns, hackingLevel, pending);
+    const hackingLevel = ns.getHackingLevel()
+    const tree = await buildTree(ns, "home")
+    const pending = []
+    collectPending(tree, ns, hackingLevel, pending)
 
     if (pending.length === 0) {
-        ns.print("✔ All eligible hosts have a backdoor installed.");
-        return;
+        ns.print("✔ All eligible hosts have a backdoor installed.")
+        return
     }
 
     // Sort alphabetically by path and print.
-    const lines = pending.map(node => buildConnectCommand(buildFullPath(node)));
-    lines.sort();
-    ns.print("⛔ Hosts that still need a backdoor:\n");
+    const lines = pending.map(node => buildConnectCommand(buildFullPath(node)))
+    lines.sort()
+    ns.print("⛔ Hosts that still need a backdoor:\n")
     for (const line of lines) {
-        ns.print(line);
+        ns.print(line)
     }
 }
 
@@ -51,22 +51,22 @@ export async function main(ns) {
  */
 function buildTree(ns, host, parent = null, visited = new Set()) {
     /** Build tree structure, storing real parent nodes */
-    visited.add(host);
+    visited.add(host)
 
     /** @type {TreeNode} */
-    const node = { host, parent, children: [] };
+    const node = { host, parent, children: [] }
 
     for (const neighbor of ns.scan(host)) {
-        if (visited.has(neighbor)) continue;
+        if (visited.has(neighbor)) continue
 
-        const details = ns.getServer(neighbor);
-        if (details.purchasedByPlayer) continue;
+        const details = ns.getServer(neighbor)
+        if (details.purchasedByPlayer) continue
 
-        const child = buildTree(ns, neighbor, node, visited);
-        node.children.push(child);
+        const child = buildTree(ns, neighbor, node, visited)
+        node.children.push(child)
     }
 
-    return node;
+    return node
 }
 
 /**
@@ -78,18 +78,18 @@ function buildTree(ns, host, parent = null, visited = new Set()) {
  */
 function collectPending(node, ns, hackingLevel, list) {
     /** Collect nodes that are rooted, backdoor‑eligible, and not yet backdoored */
-    const details = ns.getServer(node.host);
+    const details = ns.getServer(node.host)
 
-    const rooted = details.hasAdminRights;
-    const needsBackdoor = !details.backdoorInstalled;
-    const canBackdoor = hackingLevel >= (details.requiredHackingSkill ?? Infinity);
+    const rooted = details.hasAdminRights
+    const needsBackdoor = !details.backdoorInstalled
+    const canBackdoor = hackingLevel >= (details.requiredHackingSkill ?? Infinity)
 
     if (rooted && needsBackdoor && canBackdoor && node.host !== "home") {
-        list.push(node);
+        list.push(node)
     }
 
     for (const child of node.children) {
-        collectPending(child, ns, hackingLevel, list);
+        collectPending(child, ns, hackingLevel, list)
     }
 }
 
@@ -100,29 +100,29 @@ function collectPending(node, ns, hackingLevel, list) {
  */
 function buildFullPath(node) {
     /** Build full path from home to this node */
-    const path = [];
+    const path = []
     /** @type {TreeNode | null} */
-    let current = node;
+    let current = node
 
     while (current) {
-        path.unshift(current.host);
-        current = current.parent;
+        path.unshift(current.host)
+        current = current.parent
     }
-    return path;
+    return path
 }
 
 /**
  * Convert ["home","n00dles","foodnstuff"]
- * into "home; connect n00dles; connect foodnstuff"
+ * into "home connect n00dles connect foodnstuff"
  * @param {String[]} path
  * @returns {String}
  */
 function buildConnectCommand(path) {
-    const [first, ...rest] = path;
-    let cmd = "  " + first; // always "home"
+    const [first, ...rest] = path
+    let cmd = "  " + first // always "home"
     for (const host of rest) {
-        cmd += `; connect ${host}`;
+        cmd += ` connect ${host}`
     }
-    cmd += "; backdoor";
-    return cmd;
+    cmd += " backdoor"
+    return cmd
 }

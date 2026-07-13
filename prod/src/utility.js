@@ -1,7 +1,7 @@
-import { Logger } from "./logger";
-import { Server } from "./server";
+import { Logger } from "./logger"
+import { Server } from "./server"
 
-import { CRACKING_PROGRAMS } from "./constants";
+import { CRACKING_PROGRAMS } from "./constants"
 
 
 // This is needed so that Visual Code can resolve the MyPlayer class
@@ -20,12 +20,12 @@ import { CRACKING_PROGRAMS } from "./constants";
  */
 export function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileName, maxOut = false) {
     if (!maxOut) {
-        ns.exec(virusFileName, hostName, 1, targetHost);
+        ns.exec(virusFileName, hostName, 1, targetHost)
     } else {
-        const virusRamUsage = ns.getScriptRam(virusFileName);
-        const maxRam = ns.getServerMaxRam(hostName);
-        const threads = Math.floor(maxRam / virusRamUsage);
-        ns.exec(virusFileName, hostName, threads, targetHost);
+        const virusRamUsage = ns.getScriptRam(virusFileName)
+        const maxRam = ns.getServerMaxRam(hostName)
+        const threads = Math.floor(maxRam / virusRamUsage)
+        ns.exec(virusFileName, hostName, threads, targetHost)
     }
 }
 
@@ -37,8 +37,8 @@ export function executeScriptOnRemoteHost(ns, hostName, targetHost, virusFileNam
  * @returns {Server[]}     - List of servers that can be used for hacking
  */
 export function getHackingServerHostNames(ns, hosts) {
-    const hackingServers = hosts.filter(host => ns.hasRootAccess(host.hostName) && host.stats.maxRam > 0);
-    return hackingServers;
+    const hackingServers = hosts.filter(host => ns.hasRootAccess(host.hostName) && host.stats.maxRam > 0)
+    return hackingServers
 }
 
 /**
@@ -52,19 +52,19 @@ export function getHackingServerHostNames(ns, hosts) {
  * @returns {Server[]}     - A list of Server objects which can be hacked
  */
 export function getHostsThatCanBeHacked(ns, hosts) {
-    const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns);
+    const numberOfCrackingPrograms = getNumberOfCrackingPrograms(ns)
 
-    const hostsThatCanBeHacked = [];
+    const hostsThatCanBeHacked = []
     for (const host of hosts) {
         const numbOpenPortsRequired = host.stats.numOpenPortsRequired === undefined
             ? 0
-            : host.stats.numOpenPortsRequired;
+            : host.stats.numOpenPortsRequired
         if (numbOpenPortsRequired > numberOfCrackingPrograms) {
-            continue;
+            continue
         }
-        hostsThatCanBeHacked.push(host);
+        hostsThatCanBeHacked.push(host)
     }
-    return hostsThatCanBeHacked;
+    return hostsThatCanBeHacked
 }
 
 /**
@@ -76,20 +76,20 @@ export function getHostsThatCanBeHacked(ns, hosts) {
  * @returns {string[]} - A list of hostnames for hosts we can see on the network
  */
 export function getNetworkHostNames(ns) {
-    const visited = new Set([ns.getHostname(), ]);
-    const stack = [ns.getHostname(), ];
+    const visited = new Set([ns.getHostname(), ])
+    const stack = [ns.getHostname(), ]
 
     while (stack.length > 0) {
-        const server = stack.pop();
+        const server = stack.pop()
         for (const neighbor of ns.scan(server)) {
             if (!visited.has(neighbor)) {
-                visited.add(neighbor);
-                stack.push(neighbor);
+                visited.add(neighbor)
+                stack.push(neighbor)
             }
         }
     }
     // Spreads the set into an array and returns it.
-    return [...visited];
+    return [...visited]
 }
 
 /**
@@ -99,11 +99,11 @@ export function getNetworkHostNames(ns) {
  * @returns {number} - The number of cracking programs we own
  */
 export function getNumberOfCrackingPrograms(ns) {
-    let numberOfCrackingPrograms = 0;
+    let numberOfCrackingPrograms = 0
     for (const programName of CRACKING_PROGRAMS) {
-        if (ns.fileExists(programName, "home")) numberOfCrackingPrograms++;
+        if (ns.fileExists(programName, "home")) numberOfCrackingPrograms++
     }
-    return numberOfCrackingPrograms;
+    return numberOfCrackingPrograms
 }
 
 /**
@@ -114,33 +114,33 @@ export function getNumberOfCrackingPrograms(ns) {
  * @param {Server[]} hosts - List of Server objects to hack and nuke
  */
 export function hackHosts(ns, hosts) {
-    const logger = new Logger(ns);
+    const logger = new Logger(ns)
     for (const host of hosts) {
         for (const programName of CRACKING_PROGRAMS) {
             if (!ns.fileExists(programName, "home")) {
-                continue;
+                continue
             }
             switch (programName) {
                 case "BruteSSH.exe":
-                    ns.brutessh(host.hostName);
-                    break;
+                    ns.brutessh(host.hostName)
+                    break
                 case "FTPCrack.exe":
-                    ns.ftpcrack(host.hostName);
-                    break;
+                    ns.ftpcrack(host.hostName)
+                    break
                 case "relaySMTP.exe":
-                    ns.relaysmtp(host.hostName);
-                    break;
+                    ns.relaysmtp(host.hostName)
+                    break
                 case "HTTPWorm.exe":
-                    ns.httpworm(host.hostName);
-                    break;
+                    ns.httpworm(host.hostName)
+                    break
                 case "SQLInject.exe":
-                    ns.sqlinject(host.hostName);
-                    break;
+                    ns.sqlinject(host.hostName)
+                    break
             }
-            logger.success(`Executed ${programName} on ${host.hostName}`);
+            logger.success(`Executed ${programName} on ${host.hostName}`)
         }
-        ns.nuke(host.hostName);
-        logger.success(`Nuked ${host}`);
+        ns.nuke(host.hostName)
+        logger.success(`Nuked ${host}`)
     }
 }
 
@@ -155,7 +155,7 @@ export function hackHosts(ns, hosts) {
  * @param {string} fileName   - Filename of the virus to attack with
  */
 export function killAllProcessesAndRunScript(ns, logger, host, targetHost, fileName) {
-    ns.killall(host);
-    executeScriptOnRemoteHost(ns, host, targetHost, fileName, true);
-    logger.info(`Killed all processes and started script ${fileName} on host ${host}.`);
+    ns.killall(host)
+    executeScriptOnRemoteHost(ns, host, targetHost, fileName, true)
+    logger.info(`Killed all processes and started script ${fileName} on host ${host}.`)
 }

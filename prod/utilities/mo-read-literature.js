@@ -12,18 +12,18 @@
 export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["help", false],
-    ]));
+    ]))
 
     if (flags._.length === 0 || flags.help) {
-        ns.tprint(`Usage: run ${ns.getScriptName()} <.lit FILENAME> --help <BOOLEAN>`); 
-        return;
+        ns.tprint(`Usage: run ${ns.getScriptName()} <.lit FILENAME> --help <BOOLEAN>`) 
+        return
     }
-    const fileName = String(flags._[0]);
+    const fileName = String(flags._[0])
 
     // We prepare the logging.
-    ns.ui.openTail();
-    ns.disableLog('ALL');
-    ns.clearLog();
+    ns.ui.openTail()
+    ns.disableLog('ALL')
+    ns.clearLog()
 
-    ns.print(ns.read(fileName));
+    ns.print(ns.read(fileName))
 }

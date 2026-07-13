@@ -15,7 +15,7 @@ const LOG_LEVEL = Object.freeze({
     "INFO": "INFO: ", 
     "WARN": "WARN: ",
     "DEBUG": "DEBUG: ",
-});
+})
 
 /**
  * @param {NS} ns
@@ -24,17 +24,17 @@ const LOG_LEVEL = Object.freeze({
 export async function main(ns) {
     const flags = /** @type {MyFlags} */ (ns.flags([
         ["help", false],
-    ]));
+    ]))
 
     if (flags.help) {
-        ns.tprint(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName} <SYMBOL>`);
+        ns.tprint(LOG_LEVEL.INFO + `Usage: run ${ns.getScriptName} <SYMBOL>`)
         return
     }
 
-    const symbol = String(ns.args[0]);
-    const forecast = ns.stock.getForecast(symbol);
-    const volatility = ns.stock.getVolatility(symbol);
-    ns.tprint(`Stock: ${symbol}, Forecast: ${forecast}, Volatility: ${volatility}`);
+    const symbol = String(ns.args[0])
+    const forecast = ns.stock.getForecast(symbol)
+    const volatility = ns.stock.getVolatility(symbol)
+    ns.tprint(`Stock: ${symbol}, Forecast: ${forecast}, Volatility: ${volatility}`)
 }
 
 /**
@@ -44,9 +44,9 @@ export async function main(ns) {
  */
 export function autocomplete(data, args) {
     /** @type {StockAutocompleteData} */
-    const d = data;
+    const d = data
     return d.stockSymbols ?? [
         "ECP","MGCP","BLD","FSIG","NTLK","OMTK","FLCM","CLRK","SYSC",
         "CTK","AERO","OMN","UNV","GPH","WDS","LXO","HLS","NVDA","TSLA",
-    ];
+    ]
 }

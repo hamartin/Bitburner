@@ -1,30 +1,30 @@
 /** @param {NS} ns **/
 export async function main(ns) {
     // We prepare the logging.
-    ns.ui.openTail();
-    ns.disableLog('ALL');
-    ns.clearLog();
+    ns.ui.openTail()
+    ns.disableLog('ALL')
+    ns.clearLog()
 
-    const tree = buildTree(ns, "home");
-    const found = [];
-    collectContracts(tree, ns, found);
+    const tree = buildTree(ns, "home")
+    const found = []
+    collectContracts(tree, ns, found)
 
     if (found.length === 0) {
-        ns.print("✔ No coding contracts found on the network.");
-        return;
+        ns.print("✔ No coding contracts found on the network.")
+        return
     }
 
     // Build sorted output
-    const lines = [];
+    const lines = []
     for (const entry of found) {
-        const path = buildFullPath(entry.node).join(" → ");
-        const files = entry.files.join(", ");
-        lines.push(`${path}   [${files}]`);
+        const path = buildFullPath(entry.node).join(" → ")
+        const files = entry.files.join(", ")
+        lines.push(`${path}   [${files}]`)
     }
-    lines.sort();
+    lines.sort()
 
-    ns.print("📦 Coding Contracts Found:\n");
-    for (const line of lines) ns.print(line);
+    ns.print("📦 Coding Contracts Found:\n")
+    for (const line of lines) ns.print(line)
 }
 
 /**
@@ -36,22 +36,22 @@ export async function main(ns) {
  * @returns {TreeNode}
  */
 function buildTree(ns, host, parent = null, visited = new Set()) {
-    visited.add(host);
+    visited.add(host)
 
     /** @type {TreeNode} */
-    const node = { host, parent, children: [] };
+    const node = { host, parent, children: [] }
 
     for (const neighbor of ns.scan(host)) {
-        if (visited.has(neighbor)) continue;
+        if (visited.has(neighbor)) continue
 
-        const details = ns.getServer(neighbor);
-        if (details.purchasedByPlayer) continue;
+        const details = ns.getServer(neighbor)
+        if (details.purchasedByPlayer) continue
 
-        const child = buildTree(ns, neighbor, node, visited);
-        node.children.push(child);
+        const child = buildTree(ns, neighbor, node, visited)
+        node.children.push(child)
     }
 
-    return node;
+    return node
 }
 
 /**
@@ -61,13 +61,13 @@ function buildTree(ns, host, parent = null, visited = new Set()) {
  * @param {{ node: TreeNode, files: String[] }[]} list
  */
 function collectContracts(node, ns, list) {
-    const files = ns.ls(node.host, ".cct");
+    const files = ns.ls(node.host, ".cct")
     if (files.length > 0) {
-        list.push({ node, files });
+        list.push({ node, files })
     }
 
     for (const child of node.children) {
-        collectContracts(child, ns, list);
+        collectContracts(child, ns, list)
     }
 }
 
@@ -77,13 +77,13 @@ function collectContracts(node, ns, list) {
  * @returns {String[]}
  */
 function buildFullPath(node) {
-    const path = [];
+    const path = []
     /** @type {TreeNode | null} */
-    let current = node;
+    let current = node
 
     while (current) {
-        path.unshift(current.host);
-        current = current.parent;
+        path.unshift(current.host)
+        current = current.parent
     }
-    return path;
+    return path
 }

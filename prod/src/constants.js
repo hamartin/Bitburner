@@ -5,4 +5,4 @@ export const CRACKING_PROGRAMS = [
     "relaySMTP.exe",
     "HTTPWorm.exe",
     "SQLInject.exe",
-];
+]

@@ -1,20 +1,20 @@
-import { getNetworkHostNames } from "./utility";
+import { getNetworkHostNames } from "./utility"
 
 
 /**
  * A class to help with player relevant things.
  * 
- * @example const player = new MyPlayer(ns);
+ * @example const player = new MyPlayer(ns)
  */
 export class MyPlayer {
-    #ns;
+    #ns
 
     /**
      * @param {NS} ns - Netscript context
-     * @example const player = new MyPlayer(ns);
+     * @example const player = new MyPlayer(ns)
      */
     constructor (ns) {
-        this.#ns = ns;
+        this.#ns = ns
     }
 
     /**
@@ -26,12 +26,12 @@ export class MyPlayer {
      */
     #getGrowTime(hostName) {
         if (this.#ns.fileExists("Formulas.exe", "home")) {
-            const server = this.#ns.getServer(hostName);
-            const player = this.#ns.getPlayer();
-            return this.#ns.formulas.hacking.growTime(server, player);
+            const server = this.#ns.getServer(hostName)
+            const player = this.#ns.getPlayer()
+            return this.#ns.formulas.hacking.growTime(server, player)
         }
 
-        return this.#ns.getGrowTime(hostName);
+        return this.#ns.getGrowTime(hostName)
     }
 
     /**
@@ -45,11 +45,11 @@ export class MyPlayer {
      * @returns {AttackTimes}     - An object containing attack base times.
      */
     getAttackTimes(targetHost) {
-        const hackTime = this.#ns.getHackTime(targetHost);
-        const growTime = this.#getGrowTime(targetHost);
-        const weakenTime = this.#ns.getWeakenTime(targetHost);
+        const hackTime = this.#ns.getHackTime(targetHost)
+        const growTime = this.#getGrowTime(targetHost)
+        const weakenTime = this.#ns.getWeakenTime(targetHost)
 
-        return {hack: hackTime, grow: growTime, weaken: weakenTime};
+        return {hack: hackTime, grow: growTime, weaken: weakenTime}
     }
 
     /**
@@ -68,31 +68,31 @@ export class MyPlayer {
      * @returns {string} - The hostname of the host which is "best" to attack
      */
     getBestHostToAttack() {
-        const hostNames = getNetworkHostNames(this.#ns);
-        const rootedHosts = hostNames.filter(s => this.#ns.hasRootAccess(s));
+        const hostNames = getNetworkHostNames(this.#ns)
+        const rootedHosts = hostNames.filter(s => this.#ns.hasRootAccess(s))
 
-        let best = null;
-        let bestScore = -Infinity;
+        let best = null
+        let bestScore = -Infinity
         for (const hostName of rootedHosts) {
-            const maxMoney = this.#ns.getServerMaxMoney(hostName);
-            if (maxMoney <= 0) continue;
-            const requiredHackingSkill = this.#ns.getServerRequiredHackingLevel(hostName);
+            const maxMoney = this.#ns.getServerMaxMoney(hostName)
+            if (maxMoney <= 0) continue
+            const requiredHackingSkill = this.#ns.getServerRequiredHackingLevel(hostName)
             // We divide by 3 because when your hacking level is 3 times bigger
             // than the target host required hacking level, then probability of
             // success in all 4 batching stages gets a lot higher.
-            if (this.#ns.getHackingLevel() < requiredHackingSkill/3) continue;
+            if (this.#ns.getHackingLevel() < requiredHackingSkill/3) continue
 
-            const hackPercent = this.#ns.hackAnalyze(hostName);
-            const hackTime = this.#ns.getHackTime(hostName);
-            const growth = this.#ns.getGrowTime(hostName);
-            const score = (maxMoney * hackPercent * growth) / hackTime;
+            const hackPercent = this.#ns.hackAnalyze(hostName)
+            const hackTime = this.#ns.getHackTime(hostName)
+            const growth = this.#ns.getGrowTime(hostName)
+            const score = (maxMoney * hackPercent * growth) / hackTime
 
             if (score > bestScore) {
-                bestScore = score;
-                best = hostName;
+                bestScore = score
+                best = hostName
             }
         }
-        return best ?? "n00dles";
+        return best ?? "n00dles"
     }
 
     /**
@@ -106,28 +106,28 @@ export class MyPlayer {
      * |||-------------| weaken
      * 
      * @param {string} targetHost - The host name of the host to target our attack on
-     * @example const delays = player.getDelay("omega-net");
+     * @example const delays = player.getDelay("omega-net")
      * @returns {DelayTimes}
      */
     getDelay(targetHost) {
-        const OFFSET_TIME = 100;
-        const attackTimes = this.getAttackTimes(targetHost);
+        const OFFSET_TIME = 100
+        const attackTimes = this.getAttackTimes(targetHost)
 
-        const totalHackTime = attackTimes.weaken - OFFSET_TIME;
-        const totalHackWeakenTime = attackTimes.weaken;
-        const totalGrowTime = attackTimes.weaken + OFFSET_TIME;
-        const totalGrowWeakenTime = totalGrowTime + OFFSET_TIME;
+        const totalHackTime = attackTimes.weaken - OFFSET_TIME
+        const totalHackWeakenTime = attackTimes.weaken
+        const totalGrowTime = attackTimes.weaken + OFFSET_TIME
+        const totalGrowWeakenTime = totalGrowTime + OFFSET_TIME
 
-        const hackDelay = totalHackTime - attackTimes.hack;
-        const weakenHackDelay = totalHackWeakenTime - attackTimes.weaken;
-        const growDelay = totalGrowTime - attackTimes.grow;
-        const weakenGrowDelay = totalGrowWeakenTime - attackTimes.weaken;
+        const hackDelay = totalHackTime - attackTimes.hack
+        const weakenHackDelay = totalHackWeakenTime - attackTimes.weaken
+        const growDelay = totalGrowTime - attackTimes.grow
+        const weakenGrowDelay = totalGrowWeakenTime - attackTimes.weaken
 
         return {
             hack: hackDelay,
             weakenHack: weakenHackDelay,
             grow: growDelay,
             weakenGrow: weakenGrowDelay,
-        };
+        }
     }
 }

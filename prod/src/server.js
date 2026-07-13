@@ -1,36 +1,36 @@
-import { Logger } from "./logger.js";
-import { Payloads } from "./payloads.js";
+import { Logger } from "./logger.js"
+import { Payloads } from "./payloads.js"
 
 
 /**
  * A class to keep track of what is happening on a server.
  * 
- * @example const server = new Server(ns, "n00dles");
+ * @example const server = new Server(ns, "n00dles")
  */
 export class Server {
-    #debug;
-    #logger;
-    #ns;
+    #debug
+    #logger
+    #ns
 
     /**
      * @param {NS} ns                 - Netscript context
      * @param {string} hostName       - The server host name
      * @param {boolean} [debug=false] - Prints debugging info to logging window if true  
-     * @example const server = new Server(ns, "n00dles");
-     * @example const server = new Server(ns, "n00dles", true);
+     * @example const server = new Server(ns, "n00dles")
+     * @example const server = new Server(ns, "n00dles", true)
      */
     constructor (ns, hostName, debug = false) {
-        this.#debug = debug;
-        this.#logger = new Logger(ns);
-        this.#ns = ns;
+        this.#debug = debug
+        this.#logger = new Logger(ns)
+        this.#ns = ns
 
-        this.hostName = hostName;
-        this.payloads = new Payloads(ns);
-        this.stats = ns.getServer(hostName);
+        this.hostName = hostName
+        this.payloads = new Payloads(ns)
+        this.stats = ns.getServer(hostName)
     }
 
     toString() {
-        return `${this.hostName}`;
+        return `${this.hostName}`
     }
 
     /**
@@ -39,7 +39,7 @@ export class Server {
      * @returns {number}
      */
     getAvailableRam() {
-        return this.stats.maxRam - this.stats.ramUsed;
+        return this.stats.maxRam - this.stats.ramUsed
     }
 
     /**
@@ -50,14 +50,14 @@ export class Server {
     getCurrentInfo() {
         const money = this.stats.moneyAvailable === undefined
             ? 1
-            : this.stats.moneyAvailable;
+            : this.stats.moneyAvailable
         const maxMoney = this.stats.moneyMax === undefined
             ? 0
-            : this.stats.moneyMax;
+            : this.stats.moneyMax
 
-        const minSec = this.#ns.getServerMinSecurityLevel(this.hostName);
-        const sec = this.#ns.getServerSecurityLevel(this.hostName);
-        return {currentMoney: money, maxMoney: maxMoney, currentSecurity: sec, minSecurity: minSec};
+        const minSec = this.#ns.getServerMinSecurityLevel(this.hostName)
+        const sec = this.#ns.getServerSecurityLevel(this.hostName)
+        return {currentMoney: money, maxMoney: maxMoney, currentSecurity: sec, minSecurity: minSec}
     }
 
     /**
@@ -67,20 +67,20 @@ export class Server {
      * @returns {Threads}
      */
     getHackThreads(hackPercentage) {
-        const baseHackPercent = this.#ns.hackAnalyze(this.hostName);
-        const baseWeakenPower = this.#ns.weakenAnalyze(1);
+        const baseHackPercent = this.#ns.hackAnalyze(this.hostName)
+        const baseWeakenPower = this.#ns.weakenAnalyze(1)
 
-        const hackThreads = Math.floor(hackPercentage / baseHackPercent);
-        const weakenHackThreads = Math.ceil((hackThreads * 0.002) / baseWeakenPower);
-        const growThreads = Math.ceil(this.#ns.growthAnalyze(this.hostName, 1 / (1 - hackPercentage)));
-        const weakenGrowThreads = Math.ceil((growThreads * 0.004) / baseWeakenPower);
-        const totalThreads = hackThreads + weakenHackThreads + growThreads + weakenGrowThreads;
+        const hackThreads = Math.floor(hackPercentage / baseHackPercent)
+        const weakenHackThreads = Math.ceil((hackThreads * 0.002) / baseWeakenPower)
+        const growThreads = Math.ceil(this.#ns.growthAnalyze(this.hostName, 1 / (1 - hackPercentage)))
+        const weakenGrowThreads = Math.ceil((growThreads * 0.004) / baseWeakenPower)
+        const totalThreads = hackThreads + weakenHackThreads + growThreads + weakenGrowThreads
 
-        const hackThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.hackFileNameFull) * hackThreads;
-        const weakenHackThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull) * weakenHackThreads;
-        const growThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.growFileNameFull) * growThreads;
-        const weakenGrowThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull) * weakenGrowThreads;
-        const totalThreadsNeededRam = hackThreadsNeededRam + weakenHackThreadsNeededRam + growThreadsNeededRam + weakenGrowThreadsNeededRam;
+        const hackThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.hackFileNameFull) * hackThreads
+        const weakenHackThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull) * weakenHackThreads
+        const growThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.growFileNameFull) * growThreads
+        const weakenGrowThreadsNeededRam = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull) * weakenGrowThreads
+        const totalThreadsNeededRam = hackThreadsNeededRam + weakenHackThreadsNeededRam + growThreadsNeededRam + weakenGrowThreadsNeededRam
 
         /** @type {Threads} */
         return {
@@ -94,7 +94,7 @@ export class Server {
             weakenGrowRequiredRam: weakenGrowThreadsNeededRam,
             total: totalThreads,
             totalRequiredRam: totalThreadsNeededRam,
-        };
+        }
     }
 
     /**
@@ -113,37 +113,37 @@ export class Server {
      * If there is not enough RAM to execute the prepping, then the script
      * quits and an alert will be shown on screen.
      * 
-     * @example server.prepHost();
+     * @example server.prepHost()
      */
     async prepHost() {
-        const growMem = this.payloads.getRamRequirements(this.payloads.growFileNameFull);
-        const weakenMem = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull);
+        const growMem = this.payloads.getRamRequirements(this.payloads.growFileNameFull)
+        const weakenMem = this.payloads.getRamRequirements(this.payloads.weakenFileNameFull)
 
-        this.#logger.info(`Starting to prepare host ${this.hostName}.`);
-        this.#logger.info(`This might take some time. You can see the progress doing > run ./utilities/monitor.js ${this.hostName}`);
+        this.#logger.info(`Starting to prepare host ${this.hostName}.`)
+        this.#logger.info(`This might take some time. You can see the progress doing > run ./utilities/monitor.js ${this.hostName}`)
         while (true) {
-            const freeMem = this.#ns.getServerMaxRam(this.#ns.getHostname()) - this.#ns.getServerUsedRam(this.#ns.getHostname());
+            const freeMem = this.#ns.getServerMaxRam(this.#ns.getHostname()) - this.#ns.getServerUsedRam(this.#ns.getHostname())
             // Checking if the host is at minimum security level, if not we weaken it.
             if (this.#ns.getServerSecurityLevel(this.hostName) > this.#ns.getServerMinSecurityLevel(this.hostName)) {
-                const threads = Math.floor(freeMem / weakenMem);
+                const threads = Math.floor(freeMem / weakenMem)
                 if (threads <= 0) {
-                    this.#ns.alert("Not enough memory to run the weaken script for prepping.");
-                    this.#ns.exit();
+                    this.#ns.alert("Not enough memory to run the weaken script for prepping.")
+                    this.#ns.exit()
                 }
-                const pid = this.#ns.run(this.payloads.weakenFileNameFull, threads, this.hostName, 0);
+                const pid = this.#ns.run(this.payloads.weakenFileNameFull, threads, this.hostName, 0)
                 while (this.#ns.isRunning(pid, this.#ns.getHostname())) {
-                    await this.#ns.sleep(200);
+                    await this.#ns.sleep(200)
                 }
             // Checking if the host has the most amount of money it can have, if not we grow it.
             } else if (this.#ns.getServerMoneyAvailable(this.hostName) < this.#ns.getServerMaxMoney(this.hostName)) {
-                const threads = Math.floor(freeMem / growMem);
+                const threads = Math.floor(freeMem / growMem)
                 if (threads <= 0) {
-                    this.#ns.alert("Not enough memory to run the grow script for prepping.");
-                    this.#ns.exit();
+                    this.#ns.alert("Not enough memory to run the grow script for prepping.")
+                    this.#ns.exit()
                 }
-                const pid = this.#ns.run(this.payloads.growFileNameFull, threads, this.hostName, 0);
+                const pid = this.#ns.run(this.payloads.growFileNameFull, threads, this.hostName, 0)
                 while (this.#ns.isRunning(pid, this.#ns.getHostname())) {
-                    await this.#ns.sleep(200);
+                    await this.#ns.sleep(200)
                 }
             }
 
@@ -153,11 +153,11 @@ export class Server {
             if (this.#ns.getServerSecurityLevel(this.hostName) <= this.#ns.getServerMinSecurityLevel(this.hostName) 
                 && this.#ns.getServerMoneyAvailable(this.hostName) >= this.#ns.getServerMaxMoney(this.hostName)
             ) {
-                this.#logger.info(`Finished preparing host ${this.hostName}.`);
-                break;
+                this.#logger.info(`Finished preparing host ${this.hostName}.`)
+                break
             }
 
-            await this.#ns.sleep(200);
+            await this.#ns.sleep(200)
         }
     }
 
@@ -169,11 +169,11 @@ export class Server {
     getWeakenStatus() {
         const hackDifficulty = this.stats.hackDifficulty === undefined
             ? 0
-            : this.stats.hackDifficulty;
+            : this.stats.hackDifficulty
         const minDifficulty = this.stats.minDifficulty === undefined
             ? 0
-            : this.stats.minDifficulty;
-        return hackDifficulty - minDifficulty;
+            : this.stats.minDifficulty
+        return hackDifficulty - minDifficulty
     }
 
     /**
@@ -184,12 +184,12 @@ export class Server {
     getGrowStatus() {
         const moneyMax = this.stats.moneyMax === undefined
             ? 0
-            : this.stats.moneyMax;
+            : this.stats.moneyMax
         const moneyAvailable = this.stats.moneyAvailable === undefined
             ? 0
-            : this.stats.moneyAvailable;
+            : this.stats.moneyAvailable
 
-        if (this.#debug) this.#logger.debug(`Server: ${this.hostName}: moneyMax -> ${moneyMax}, moneyAvailable -> ${moneyAvailable}`);
-        return moneyMax - moneyAvailable;
+        if (this.#debug) this.#logger.debug(`Server: ${this.hostName}: moneyMax -> ${moneyMax}, moneyAvailable -> ${moneyAvailable}`)
+        return moneyMax - moneyAvailable
     }
 }

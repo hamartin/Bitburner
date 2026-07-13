@@ -1,27 +1,27 @@
-import { Logger } from "./logger";
+import { Logger } from "./logger"
 
 
 /**
  * A class to help with the cloud servers.
  * 
- * @example const cloudServer = new CloudServers(ns);
- * @example const cloudServers = new CloudServers(ns, "SomeCoolName-");
+ * @example const cloudServer = new CloudServers(ns)
+ * @example const cloudServers = new CloudServers(ns, "SomeCoolName-")
  */
 export class CloudServers {
-    #logger;
-    #ns;
+    #logger
+    #ns
 
     /**
      * @param {NS} ns             - Netscript context
      * @param {string} namePrefix - The name of the cloud servers with numbering postfixed to it.
-     * @example const cloudServers = new CloudServers(ns);
-     * @example const cloudServers = new CloudServers(ns, "SomeCoolName-");
+     * @example const cloudServers = new CloudServers(ns)
+     * @example const cloudServers = new CloudServers(ns, "SomeCoolName-")
      */
     constructor (ns, namePrefix = "Vogon-") {
-        this.#ns = ns;
-        this.#logger = new Logger(ns);
+        this.#ns = ns
+        this.#logger = new Logger(ns)
 
-        this.namePrefix = namePrefix;
+        this.namePrefix = namePrefix
         // The different amount of RAM you can have on a cloud purchased server. We are
         // ignoring the 2GB and 4GB alternatives as almost all scripts will be bigger than this.
         this.ramTiers = [
@@ -29,8 +29,8 @@ export class CloudServers {
             1024, 2048, 4096, 8192, 16384,
             32768, 65536, 131072, 262144,
             524288, 1048576,
-        ];
-        this.maxServers = ns.cloud.getServerLimit();
+        ]
+        this.maxServers = ns.cloud.getServerLimit()
     }
 
     /**
@@ -39,11 +39,11 @@ export class CloudServers {
      */
     buyServer() {
         // When buying, we allways buy the smallest.
-        const cost = this.#ns.cloud.getServerCost(this.ramTiers[0]);
+        const cost = this.#ns.cloud.getServerCost(this.ramTiers[0])
         if (this.#ns.getServerMoneyAvailable(this.#ns.getHostname()) > cost) {
-            const hostName = this.namePrefix + this.#ns.cloud.getServerNames().length;
-            this.#ns.cloud.purchaseServer(hostName, this.ramTiers[0]);
-            this.#logger.info(`Bought new server ${hostName} with ${this.ramTiers[0]}GB`);
+            const hostName = this.namePrefix + this.#ns.cloud.getServerNames().length
+            this.#ns.cloud.purchaseServer(hostName, this.ramTiers[0])
+            this.#logger.info(`Bought new server ${hostName} with ${this.ramTiers[0]}GB`)
         }
     }
 
@@ -54,9 +54,9 @@ export class CloudServers {
      */
     canBuyMoreServers() {
         if (this.#ns.cloud.getServerNames().length < this.maxServers) {
-            return true;
+            return true
         }
-        return false;
+        return false
     }
 
     /**
@@ -65,7 +65,7 @@ export class CloudServers {
      * @returns {string[]} - A list of host names for the cloud servers we have bought
      */
     getServerNames() {
-        return this.#ns.cloud.getServerNames();
+        return this.#ns.cloud.getServerNames()
     }
 
     /**
@@ -75,14 +75,14 @@ export class CloudServers {
      * @returns {String[]} - List of cloudserver names we have bought
      */
     getServerHostNames() {
-        const hostNames = [];
+        const hostNames = []
 
-        let i = 0;
+        let i = 0
         while (this.#ns.serverExists(this.namePrefix + i)) {
-            hostNames.push(this.namePrefix + i);
-            i++;
+            hostNames.push(this.namePrefix + i)
+            i++
         }
-        return hostNames;
+        return hostNames
     }
 
     /**
@@ -93,22 +93,22 @@ export class CloudServers {
      */
     upgradeServer(hostName) {
         // Checking if there is a next tier
-        const ramTier = this.#ns.getServerMaxRam(hostName);
-        const nextRamTier = this.ramTiers.find(r => r > ramTier);
+        const ramTier = this.#ns.getServerMaxRam(hostName)
+        const nextRamTier = this.ramTiers.find(r => r > ramTier)
 
         // If theres no next tier on the smallest cloud server,
         // then this script is done with its job.
         // We could compare ramTier with ns.getRamLimit() also, but
         // I don't see a reason for doing this since I allready
         // have the same end result with nextRamTier.
-        if (!nextRamTier) return false;
+        if (!nextRamTier) return false
 
         // We check the cost of the next tier, and if we can afford it, we upgrade the server.
-        const cost = this.#ns.cloud.getServerUpgradeCost(hostName, nextRamTier);
+        const cost = this.#ns.cloud.getServerUpgradeCost(hostName, nextRamTier)
         if (this.#ns.getServerMoneyAvailable(this.#ns.getHostname()) > cost) {
-            this.#ns.cloud.upgradeServer(hostName, nextRamTier);
-            this.#logger.info(`Upgraded RAM on ${hostName} from ${this.#ns.format.ram(ramTier, 2)} to ${this.#ns.format.ram(nextRamTier, 2)}`);
+            this.#ns.cloud.upgradeServer(hostName, nextRamTier)
+            this.#logger.info(`Upgraded RAM on ${hostName} from ${this.#ns.format.ram(ramTier, 2)} to ${this.#ns.format.ram(nextRamTier, 2)}`)
         }
-        return true;
+        return true
     }
 }

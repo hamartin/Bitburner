@@ -1,25 +1,25 @@
 /**
  * A class to help with logging
  * 
- * @example const logger = new Logger(ns);
+ * @example const logger = new Logger(ns)
  */
 export class Logger {
-    #locale;
-    #ns;
+    #locale
+    #ns
 
     /**
      * @param {NS} ns - Netscript context
-     * @example const logger = new Logger(ns);
+     * @example const logger = new Logger(ns)
      */
     constructor (ns, locale = "nb-NO") {
-        this.DEBUG = "DEBUG:";
-        this.ERROR = "ERROR:";
-        this.INFO = "INFO:";
-        this.SUCCESS = "SUCCESS:";
-        this.WARN = "WARN:";
+        this.DEBUG = "DEBUG:"
+        this.ERROR = "ERROR:"
+        this.INFO = "INFO:"
+        this.SUCCESS = "SUCCESS:"
+        this.WARN = "WARN:"
 
-        this.#ns = ns;
-        this.#locale = locale;
+        this.#ns = ns
+        this.#locale = locale
     }
 
     /**
@@ -32,8 +32,8 @@ export class Logger {
     #write(level, message, locale = undefined) {
         const timeStamp = locale !== undefined
             ? new Date().toLocaleString(locale).replace(",", "")
-            : new Date().toLocaleString(this.#locale).replace(",", "");
-        this.#ns.print(`${level} ${timeStamp} ${message}`);
+            : new Date().toLocaleString(this.#locale).replace(",", "")
+        this.#ns.print(`${level} ${timeStamp} ${message}`)
     }
 
     /**
@@ -41,7 +41,7 @@ export class Logger {
      * @param {string} [locale=undefined] - Locale for timestamp formatting 
      */
     debug(message, locale = undefined) {
-        this.#write(this.DEBUG, message, locale);
+        this.#write(this.DEBUG, message, locale)
     }
 
     /**
@@ -49,7 +49,7 @@ export class Logger {
      * @param {string} [locale=undefined] - Locale for timestamp formatting 
      */
     error(message, locale = undefined) {
-        this.#write(this.ERROR, message, locale);
+        this.#write(this.ERROR, message, locale)
     }
 
     /**
@@ -57,7 +57,7 @@ export class Logger {
      * @param {string} [locale=undefined] - Locale for timestamp formatting 
      */
     info(message, locale = undefined) {
-        this.#write(this.INFO, message, locale);
+        this.#write(this.INFO, message, locale)
     }
 
     /**
@@ -65,7 +65,7 @@ export class Logger {
      * @param {string} [locale=undefined] - Locale for timestamp formatting 
      */
     success(message, locale = undefined) {
-        this.#write(this.SUCCESS, message, locale);
+        this.#write(this.SUCCESS, message, locale)
     }
 
     /**
@@ -73,6 +73,6 @@ export class Logger {
      * @param {string} [locale=undefined] - Locale for timestamp formatting 
      */
     warn(message, locale = undefined) {
-        this.#write(this.WARN, message, locale);
+        this.#write(this.WARN, message, locale)
     }
 }

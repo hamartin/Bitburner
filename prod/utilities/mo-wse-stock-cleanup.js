@@ -7,23 +7,23 @@
 
 /** @param {NS} ns */
 export async function main(ns) {
-    const symbols = ns.stock.getSymbols();
+    const symbols = ns.stock.getSymbols()
 
     for (const symbol of symbols) {
-        const position = ns.stock.getPosition(symbol);
-        const longShares = position[0];
-        const shortShares = position[2];
+        const position = ns.stock.getPosition(symbol)
+        const longShares = position[0]
+        const shortShares = position[2]
 
         if (longShares > 0) {
-            ns.stock.sellStock(symbol, longShares);
-            ns.tprint(`Sold LONG ${symbol} (${longShares} shares)`);
+            ns.stock.sellStock(symbol, longShares)
+            ns.tprint(`Sold LONG ${symbol} (${longShares} shares)`)
         }
 
         if (shortShares > 0) {
-            ns.stock.buyShort(symbol, shortShares);
-            ns.tprint(`Covered SHORT ${symbol} (${shortShares} shares)`);
+            ns.stock.buyShort(symbol, shortShares)
+            ns.tprint(`Covered SHORT ${symbol} (${shortShares} shares)`)
         }
     }
 
-    ns.tprint("All stock positions closed.");
+    ns.tprint("All stock positions closed.")
 }
