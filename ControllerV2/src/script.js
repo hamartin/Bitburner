@@ -1,6 +1,3 @@
-import { NSBound } from "./nsbound"
-
-
 /**
  * A class which is designed to be used almost as a singleton and handles all
  * script specific stuff.
@@ -8,8 +5,9 @@ import { NSBound } from "./nsbound"
  * @example const script = new Script(ns, "weaken.js")
  * @example const script = new Script(ns, "weaken.js", "/other")
  */
-export class Script extends NSBound {
+export class Script {
     // Private members
+    #ns
     #fileName
     #path
 
@@ -24,12 +22,12 @@ export class Script extends NSBound {
      * @example const script = new Script(ns, "weaken.js", "/other")
      */
     constructor(ns, fileName, path = "/scripts") {
-        super(ns)
+        this.#ns = ns
         this.#fileName = fileName
         this.#path = path
 
         /** @type {PathAndFileName_s} */
-        this.pathAndFileName = `${path}/${fileName}`
+        this.pathAndFileName = `${this.#path}/${this.#fileName}`
         if (!ns.fileExists(this.pathAndFileName)) {
             ns.alert(`Script ${fileName} cannot be found in ${path}. Quitting!`)
             ns.exit()
@@ -44,8 +42,8 @@ export class Script extends NSBound {
      * @param {HostName_s} hostName 
      * @returns {boolean}
      */
-    hostHasScript(hostName) {
-        return this.ns.fileExists(this.pathAndFileName, hostName)
+    serverHasScript(hostName) {
+        return this.#ns.fileExists(this.pathAndFileName, hostName)
     }
 
     /**
@@ -53,7 +51,21 @@ export class Script extends NSBound {
      * 
      * @param {HostName_s} hostName 
      */
-    copyToHost(hostName) {
-        this.ns.scp(this.pathAndFileName, hostName)
+    copyToServer(hostName) {
+        this.#ns.scp(this.pathAndFileName, hostName)
+    }
+
+    /**
+     * Executes the script this object has "responsebility" for.
+     * 
+     * @param {HostName_s} sourceHostName - Host name of the server to run the script on
+     * @param {Threads_n} threads         - How many threads to run for the script
+     * @param {...string} args            - Any additional arguments needed to pass to the script
+     */
+    runScriptOnServer(sourceHostName, threads, ...args) {
+        if (!this.serverHasScript(sourceHostName)) {
+            this.copyToServer(sourceHostName)
+        }
+        this.#ns.exec(this.pathAndFileName, sourceHostName, threads, ...args)
     }
 }

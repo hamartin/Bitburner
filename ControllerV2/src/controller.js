@@ -1,55 +1,67 @@
 import { Network } from "./network"
 import { Script } from "./script"
-import { Threads } from "./threads"
+
+import { getServersInfo } from "./servers"
 
 
-/**
- * @param {NS} ns - Netscript context
- */
-export async function main(ns) {
-    const network = new Network(ns)
-    const threads = new Threads(ns)
-    const script = new Script(ns, "payload.js")
+export class Controller {
+    // Private members
+    #ns
+    #network
+    #script
 
-    while (true) {
-        const hostNames = network.getRootedHostNames()
+    /**
+     * @param {NS} ns                     - Netscript context 
+     * @param {HostName_s} targetHostName - Host name of the host to drain
+     */
+    constructor(ns, targetHostName) {
+        this.#ns = ns
+        this.#network = new Network(ns)
+        this.#script = new Script(ns, "payload.js")
 
-        /** @type {HostsInfo_m} */
-        const hostsInfo = new Map(
-            hostNames.map(h => [h, {
-                threads: threads.getNumberOfThreadsAHostCanRun(h, script.requiredRam),
-                stats: ns.getServer(h),
-            }])
-        )
-        /** @type {HostsInfo_m} */
-        const hostsWithThreads = new Map(
-            [...hostsInfo].filter(([host, info]) => info.threads >= 1)
-        );
+        this.targetHostname = targetHostName
+    }
 
-        const bestSourceHost = getBestHost(hostsWithThreads)
-        if (bestSourceHost !== null) {
-            if (!script.hostHasScript(bestSourceHost)) {
-                script.copyToHost(bestSourceHost)
+    async run() {
+        while (true) {
+            const hostNames = this.#network.getRootedHostNames()
+
+            // We get information about all the hosts we found and reduce the number
+            // of hosts to only those that has reported they can run 1 or more
+            // threads.
+            const serversInfo = getServersInfo(this.#ns, hostNames, this.#script)
+            /** @type {ServersInfo_m} */
+            const serversWithThreads = new Map(
+                [...serversInfo].filter(([_, info]) => info.threads >= 1)
+            );
+
+            // We find the server which can run the most amount of threads for the
+            // script we are using and run the script on that host.
+            /** @type {HostName_s | null} */
+            const bestSourceServer = getBestServer(serversWithThreads)
+            if (bestSourceServer !== null) {
+                /** @type {Threads_n | undefined} */
+                if (bestSourceServer !== null) {
+                    const numbThreads = serversWithThreads.get(bestSourceServer)?.threads
+                    if (numbThreads !== undefined) {
+                        this.#script.runScriptOnServer(bestSourceServer, numbThreads, this.targetHostname)
+                    }
+                }
             }
-            ns.exec(script.pathAndFileName,
-                bestSourceHost,
-                threads.getNumberOfThreadsAHostCanRun(bestSourceHost, script.requiredRam),
-                "omega-net"
-            )
+            await this.#ns.sleep(1000)
+            // TODO: Vi må finne ut av bestTarget, regne ut batch sizes og finne ut
+            // av hvordan vi holder styr på hvilke hoster som skal ha hva slags type
+            // threads/batches osv.
         }
-        await ns.sleep(1000)
-        // TODO: Vi må finne ut av bestTarget, regne ut batch sizes og finne ut
-        // av hvordan vi holder styr på hvilke hoster som skal ha hva slags type
-        // threads/batches osv.
     }
 }
 
 /**
  * 
- * @param {HostsInfo_m} hostsInfo - A map with host name as key and HostInfo_o as value.
+ * @param {ServersInfo_m} hostsInfo - A map with host name as key and HostInfo_o as value.
  * @returns {HostName_s | null}
  */
-function getBestHost(hostsInfo) {
+function getBestServer(hostsInfo) {
     let bestHost = null;
     let bestThreads = -Infinity;
 
@@ -63,4 +75,16 @@ function getBestHost(hostsInfo) {
     }
 
     return bestHost;
+}
+
+/**
+ * Runs the controller as it is right now. I can't "hide" main from other files
+ * which import this file, because BitBurner will only run main which is
+ * exported and async.
+ * 
+ * @param {NS} ns - Netscript context
+ */
+export async function main(ns) {
+    const controller = new Controller(ns, "phantasy")
+    await controller.run()
 }

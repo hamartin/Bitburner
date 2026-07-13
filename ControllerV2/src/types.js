@@ -13,7 +13,7 @@
  */
 
 /**
- * @typedef {Map<HostName_s, HostInfo_o>} HostsInfo_m
+ * @typedef {Map<HostName_s, HostInfo_o>} ServersInfo_m
  */
 
 /**
