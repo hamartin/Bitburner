@@ -35,20 +35,8 @@ export class Controller {
                 [...serversInfo].filter(([_, info]) => info.threads >= 1)
             );
 
-            // We find the server which can run the most amount of threads for the
-            // script we are using and run the script on that host.
-            /** @type {HostName_s | null} */
-            const bestSourceServer = getBestServer(serversWithThreads)
-            if (bestSourceServer !== null) {
-                /** @type {Threads_n | undefined} */
-                if (bestSourceServer !== null) {
-                    const numbThreads = serversWithThreads.get(bestSourceServer)?.threads
-                    if (numbThreads !== undefined) {
-                        this.#script.runScriptOnServer(bestSourceServer, numbThreads, this.targetHostname)
-                    }
-                }
-            }
-            await this.#ns.sleep(1000)
+            runOnBestServer(serversWithThreads, this.#script, this.targetHostname)
+            await this.#ns.sleep(200)
             // TODO: Vi må finne ut av bestTarget, regne ut batch sizes og finne ut
             // av hvordan vi holder styr på hvilke hoster som skal ha hva slags type
             // threads/batches osv.
@@ -75,6 +63,26 @@ function getBestServer(hostsInfo) {
     }
 
     return bestHost;
+}
+
+/**
+ * Finds the best server to run the script on, then gets the number of threads
+ * it can run and then runs the script itself.
+ * 
+ * @param {ServersInfo_m} serverWithThreads - Map of hosts and their stats
+ * @param {Script} script                   - The script object to run the code for
+ * @param  {...string} args                 - Any additional arguments to be passed to ns.exec
+ */
+function runOnBestServer(serverWithThreads, script, ...args) {
+    /** @type {HostName_s | null} */
+    const best = getBestServer(serverWithThreads)
+    if (!best) return
+
+    /** @type {Threads_n | undefined} */
+    const threads = serverWithThreads.get(best)?.threads
+    if (!threads) return
+
+    script.runScriptOnServer(best, threads, ...args)
 }
 
 /**
