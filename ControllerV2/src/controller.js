@@ -26,7 +26,7 @@ export class Controller {
     constructor(ns) {
         this.#ns = ns
         this.#network = new Network(ns)
-        this.#scriptPayload = new Script(ns, "payload.js")
+        this.#scriptPayload = new Script(ns, "egh.js")
         this.#scriptHack = new Script(ns, "hack.js")
         this.#scriptGrow = new Script(ns, "grow.js")
         this.#scriptWeaken = new Script(ns, "weaken.js")
