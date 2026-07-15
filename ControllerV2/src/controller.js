@@ -23,7 +23,9 @@ export class Controller {
     // Private members
     #ns
 
+    #offsetTime
     #network
+    #numbBatches
     #scriptPayload
     #scriptHack
     #scriptGrow
@@ -31,9 +33,12 @@ export class Controller {
     #threads
 
     /**
-     * @param {NS} ns                     - Netscript context 
+     * @param {NS} ns                      - Netscript context 
+     * @param {number} [hackPercentage=.1] - The percent of server available money to hack per batch.
+     * @param {number} [numbBatches=100]   - The number of batches to create and execute before returning
+     * @param {number} [offsetTime=100]    - The offset to use when timing batches
      */
-    constructor(ns, hackPercentage = .1) {
+    constructor(ns, hackPercentage = .1, numbBatches = 100, offsetTime = 100) {
         this.#ns = ns
 
         this.#network = new Network(ns)
@@ -42,6 +47,8 @@ export class Controller {
         this.#scriptGrow = new Script(ns, "grow.js")
         this.#scriptWeaken = new Script(ns, "weaken.js")
         this.#threads = new Threads(ns, hackPercentage)
+        this.#offsetTime = offsetTime
+        this.#numbBatches = numbBatches
 
         // The default host to target if getting a host to target is not doable.
         this.targetHostName = "n00dles"
@@ -49,6 +56,67 @@ export class Controller {
 
     toString() {
         return `Controller(${this.#ns}, ${this.targetHostName})`
+    }
+
+    async copyFilesToServers(serverNames) {
+        for (const serverName of serverNames) {
+            if (serverName === this.#ns.getHostname()) continue
+            await this.#ns.scp(this.#scriptHack.pathAndFileName, serverName)
+            await this.#ns.scp(this.#scriptWeaken.pathAndFileName, serverName)
+            await this.#ns.scp(this.#scriptGrow.pathAndFileName, serverName)
+            await this.#ns.scp(this.#scriptPayload.pathAndFileName, serverName)
+        }
+    }
+
+    /**
+     * Creates batches and executes them.
+     * 
+     * @param {ServerName_s} targetServerName - The host name of the server to attack.
+     */
+    async createBatchesAndExecute(targetServerName) {
+        const serverNames = this.#network.getServerNames()
+        const sortedServerNames = this.getSortedServers(serverNames)
+
+        const threads = this.#threads.getHGWThreads(targetServerName)
+        const delays = this.getBatchingDelays(targetServerName)
+
+        const jobs = [
+            {
+                script: this.#scriptHack.pathAndFileName,
+                threads: threads.hackThreads,
+                delay: delays.hackDelay,
+                requiredRAM: this.#ns.getScriptRam(this.#scriptHack.pathAndFileName),
+            },
+            {
+                script: this.#scriptWeaken.pathAndFileName,
+                threads: threads.weakenHackThreads,
+                delay: delays.weakenHackDelay,
+                requiredRAM: this.#ns.getScriptRam(this.#scriptWeaken.pathAndFileName),
+            },
+            {
+                script: this.#scriptGrow.pathAndFileName,
+                threads: threads.growThreads,
+                delay: delays.growDelay,
+                requiredRAM: this.#ns.getScriptRam(this.#scriptGrow.pathAndFileName),
+            },
+            {
+                script: this.#scriptWeaken.pathAndFileName,
+                threads: threads.weakenGrowThreads,
+                delay: delays.weakenGrowDelay,
+                requiredRAM: this.#ns.getScriptRam(this.#scriptWeaken.pathAndFileName),
+            }
+        ]
+        
+        for (let i = 0; i < this.#numbBatches; i++) {
+            // Clone jobs and apply delay offset
+            const offsetJobs = jobs.map(job => ({
+                script: job.script,
+                threads: job.threads,
+                delay: job.delay + (i * 50),
+                requiredRAM: job.requiredRAM,
+            }))
+            await this.runBatch(offsetJobs, sortedServerNames, targetServerName)
+        }
     }
 
     /**
@@ -74,6 +142,29 @@ export class Controller {
             if (remainingThreads <= 0) break
         }
         return remainingThreads
+    }
+
+    /**
+     * 
+     * @param {ServerName_s} targetServerName 
+     * @returns {Delay_o}
+     */
+    getBatchingDelays(targetServerName) {
+        const hackTime = this.#ns.getHackTime(targetServerName)
+        const growTime = this.#ns.getGrowTime(targetServerName)
+        const weakenTime = this.#ns.getWeakenTime(targetServerName)
+
+        const totalHackTime = weakenTime - this.#offsetTime
+        const totalHackWeakenTime = weakenTime
+        const totalGrowTime = weakenTime + this.#offsetTime
+        const totalGrowWeakenTime = totalGrowTime + this.#offsetTime
+
+        return {
+            hackDelay: totalHackTime - hackTime,
+            weakenHackDelay: totalHackWeakenTime - weakenTime,
+            growDelay: totalGrowTime - growTime,
+            weakenGrowDelay: totalGrowWeakenTime - weakenTime,
+        }
     }
 
     /**
@@ -197,6 +288,47 @@ export class Controller {
     }
 
     /**
+     * Run the needed threads for a batch distributing them over the hosts if
+     * there is not enough memory.
+     * 
+     * @param {Object} jobs 
+     * @param {ServerNames_l} sortedServerNames 
+     * @param {ServerName_s} targetServerName 
+     */
+    async runBatch(jobs, sortedServerNames, targetServerName) {
+        for (const job of jobs) {
+            let threadsLeft = job.threads
+
+            while (threadsLeft > 0) {
+                for (const serverName of sortedServerNames) {
+                    const serverInfo = this.#ns.getServer(serverName)
+
+                    // Allow home to keep some RAM free
+                    if (serverName === "home" && serverInfo.maxRam >= 128) {
+                        serverInfo.maxRam -= 32
+                    }
+
+                    const freeRAM = serverInfo.maxRam - serverInfo.ramUsed
+                    const maxThreads = Math.floor(freeRAM / job.requiredRAM)
+                    if (maxThreads <= 0) continue
+
+                    const threadsToRun = Math.min(threadsLeft, maxThreads)
+                    if (threadsToRun <= 0) break
+
+                    this.#ns.exec(
+                        job.script,
+                        serverName,
+                        threadsToRun,
+                        targetServerName,
+                        job.delay
+                    )
+                    threadsLeft -= threadsToRun
+                }
+            }
+        }
+    }
+
+    /**
      * Runs a batching algorithm which times when the 4 stages of hack, weaken
      * hack, grow and weaken grow. The attacking host is chosen based on if it
      * can fit all 4 stages or 1 or more stages in RAM.
@@ -213,11 +345,15 @@ export class Controller {
             const targetServerInfo = serversInfo.get(targetServerName)
             if (targetServerInfo === undefined) return
 
+            await this.copyFilesToServers(serverNames)
+
             // Prepare host if needed.
             if (this.serverNeedPreparing(targetServerInfo)) {
                 await this.prepareServer(targetServerName)
             }
-            await this.#ns.sleep(1000)
+
+            await this.createBatchesAndExecute(targetServerName)
+            await this.#ns.sleep(50)
         }
     }
 
@@ -271,9 +407,46 @@ export class Controller {
         const serverNames = this.#network.getRootedHostNames()
         const sortedServerNames = this.getSortedServers(serverNames)
 
-        await runPrepStage(this.#ns, threads.weakenToMinThreads, sortedServerNames, this.#scriptWeaken, targetServerName)
-        await runPrepStage(this.#ns, threads.growToMaxThreads, sortedServerNames, this.#scriptGrow, targetServerName)
-        await runPrepStage(this.#ns, threads.weakenGrowToMaxThreads, sortedServerNames, this.#scriptWeaken, targetServerName)
+        await this.runPrepStage(threads.weakenToMinThreads, sortedServerNames, this.#scriptWeaken, targetServerName)
+        await this.runPrepStage(threads.growToMaxThreads, sortedServerNames, this.#scriptGrow, targetServerName)
+        await this.runPrepStage(threads.weakenGrowToMaxThreads, sortedServerNames, this.#scriptWeaken, targetServerName)
+    }
+
+    /**
+     * Prepares a host we are going to attack for profit, increasing available
+     * money to the max, reducing security to a minimum.
+     * 
+     * @param {Threads_n} threads 
+     * @param {ServerNames_l} sortedServerNames
+     * @param {Script} script
+     * @param {ServerName_s} targetServerName
+     */
+    async runPrepStage(threads, sortedServerNames, script, targetServerName) {
+        while (threads > 0) {
+            const pids = []
+            for (const serverName of sortedServerNames) {
+                const serverInfo = this.#ns.getServer(serverName)
+                // I want to be able to do some basic work on the home server when doing the prepping.
+                if (serverInfo.hostname === "home" && serverInfo.maxRam >= 128) {
+                    serverInfo.maxRam -= 32
+                }
+                const freeRAM = serverInfo.maxRam - serverInfo.ramUsed
+                const maxThreads = Math.floor(freeRAM / script.requiredRAM)
+                if (maxThreads <= 0) continue
+
+                const threadsToRun = Math.min(threads, maxThreads)
+                if (threadsToRun <= 0) break
+                pids.push(this.#ns.exec(
+                    script.pathAndFileName,
+                    serverName,
+                    threadsToRun,
+                    targetServerName,
+                    0
+                ))
+                threads -= threadsToRun
+            }
+            await waitForAll(this.#ns, pids)
+        }
     }
 }
 
@@ -287,41 +460,5 @@ export class Controller {
 export async function main(ns) {
     const controller = new Controller(ns)
     //await controller.runEGH()
-    await controller.runBatching("iron-gym")
-}
-
-/**
- * 
- * @param {NS} ns
- * @param {Threads_n} threads 
- * @param {ServerNames_l} sortedServerNames
- * @param {Script} script
- * @param {ServerName_s} targetServerName
- */
-async function runPrepStage(ns, threads, sortedServerNames, script, targetServerName) {
-    while (threads > 0) {
-        const pids = []
-        for (const serverName of sortedServerNames) {
-            const serverInfo = ns.getServer(serverName)
-            // I want to be able to do some basic work on the home server when doing the prepping.
-            if (serverInfo.hostname === "home" && serverInfo.maxRam >= 128) {
-                serverInfo.maxRam -= 32
-            }
-            const freeRAM = serverInfo.maxRam - serverInfo.ramUsed
-            const maxThreads = Math.floor(freeRAM / script.requiredRAM)
-            if (maxThreads <= 0) continue
-
-            const threadsToRun = Math.min(threads, maxThreads)
-            if (threadsToRun <= 0) break
-            pids.push(ns.exec(
-                script.pathAndFileName,
-                serverName,
-                threadsToRun,
-                targetServerName,
-                0
-            ))
-            threads -= threadsToRun
-        }
-        await waitForAll(ns, pids)
-    }
+    await controller.runBatching("n00dles")
 }

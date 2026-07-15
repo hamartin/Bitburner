@@ -7,6 +7,14 @@
  */
 
 /**
+ * @typedef {Object} Delay_o
+ * @property {Delay_n} hackDelay
+ * @property {Delay_n} weakenHackDelay
+ * @property {Delay_n} growDelay
+ * @property {Delay_n} weakenGrowDelay
+ */
+
+/**
  * @typedef {string} FileName_s
  */
 

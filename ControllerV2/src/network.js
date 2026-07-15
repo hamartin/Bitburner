@@ -28,7 +28,7 @@ export class Network {
      * @returns {ServerNames_l} - A list of hostnames for hosts we can see on the network
      * @example const hostNames = network.getHostNames()
      */
-    getHostNames() {
+    getServerNames() {
         const visited = new Set([this.#ns.getHostname(), ])
         const stack = [this.#ns.getHostname(), ]
 
@@ -52,6 +52,6 @@ export class Network {
      * @returns {ServerNames_l} - Returns a list of host names where the host has been rooted.
      */
     getRootedHostNames() {
-        return this.getHostNames().filter(h => this.#ns.hasRootAccess(h))
+        return this.getServerNames().filter(h => this.#ns.hasRootAccess(h))
     }
 }
