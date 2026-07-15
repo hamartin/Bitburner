@@ -25,7 +25,6 @@ export class Controller {
 
     #offsetTime
     #network
-    #numbBatches
     #scriptPayload
     #scriptHack
     #scriptGrow
@@ -35,10 +34,9 @@ export class Controller {
     /**
      * @param {NS} ns                      - Netscript context 
      * @param {number} [hackPercentage=.1] - The percent of server available money to hack per batch.
-     * @param {number} [numbBatches=100]   - The number of batches to create and execute before returning
      * @param {number} [offsetTime=100]    - The offset to use when timing batches
      */
-    constructor(ns, hackPercentage = .1, numbBatches = 100, offsetTime = 100) {
+    constructor(ns, hackPercentage = .1, offsetTime = 100) {
         this.#ns = ns
 
         this.#network = new Network(ns)
@@ -48,14 +46,13 @@ export class Controller {
         this.#scriptWeaken = new Script(ns, "weaken.js")
         this.#threads = new Threads(ns, hackPercentage)
         this.#offsetTime = offsetTime
-        this.#numbBatches = numbBatches
 
         // The default host to target if getting a host to target is not doable.
-        this.targetHostName = "n00dles"
+        this.targetServerName = "n00dles"
     }
 
     toString() {
-        return `Controller(${this.#ns}, ${this.targetHostName})`
+        return `Controller(${this.#ns}, ${this.targetServerName})`
     }
 
     async copyFilesToServers(serverNames) {
@@ -106,16 +103,11 @@ export class Controller {
                 requiredRAM: this.#ns.getScriptRam(this.#scriptWeaken.pathAndFileName),
             }
         ]
-        
-        for (let i = 0; i < this.#numbBatches; i++) {
-            // Clone jobs and apply delay offset
-            const offsetJobs = jobs.map(job => ({
-                script: job.script,
-                threads: job.threads,
-                delay: job.delay + (i * 50),
-                requiredRAM: job.requiredRAM,
-            }))
-            await this.runBatch(offsetJobs, sortedServerNames, targetServerName)
+        while (true) {
+            await this.runBatch(jobs, sortedServerNames, targetServerName)
+            const newTargetServerName = this.getBestHostsToAttack(serverNames)
+            if (newTargetServerName !== this.targetServerName) break
+            await this.#ns.sleep(this.#offsetTime)
         }
     }
 
@@ -202,7 +194,7 @@ export class Controller {
         }
         // If no best host can be found, we return the easiest host to attack in
         // the game.
-        return best ?? this.targetHostName
+        return best ?? this.targetServerName
     }
 
     /**
@@ -333,16 +325,19 @@ export class Controller {
      * hack, grow and weaken grow. The attacking host is chosen based on if it
      * can fit all 4 stages or 1 or more stages in RAM.
      * 
-     * @param {ServerName_s | undefined} targetServerName - Target host name to attack or undefined
+     * @param {ServerName_s | undefined} [targetServerName=undefined] - Target host name to attack or undefined
      */
-    async runBatching(targetServerName) {
+    async runBatching(targetServerName = undefined) {
         while (true) {
             const serverNames = this.#network.getRootedHostNames()
+            const serversInfo = getServersInfo(this.#ns, serverNames)
             if (targetServerName === undefined) {
                 targetServerName = this.getBestHostsToAttack(serverNames)
             }
-            const serversInfo = getServersInfo(this.#ns, serverNames)
-            const targetServerInfo = serversInfo.get(targetServerName)
+            if (this.targetServerName !== targetServerName) {
+                this.targetServerName = targetServerName
+            }
+            const targetServerInfo = serversInfo.get(this.targetServerName)
             if (targetServerInfo === undefined) return
 
             await this.copyFilesToServers(serverNames)
@@ -353,7 +348,6 @@ export class Controller {
             }
 
             await this.createBatchesAndExecute(targetServerName)
-            await this.#ns.sleep(50)
         }
     }
 
@@ -460,5 +454,6 @@ export class Controller {
 export async function main(ns) {
     const controller = new Controller(ns)
     //await controller.runEGH()
-    await controller.runBatching("n00dles")
+    //await controller.runBatching("n00dles")
+    await controller.runBatching()
 }
