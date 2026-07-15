@@ -1,13 +1,9 @@
-import { Logger } from "./logger"
-
-
 /**
  * A class to help with stock trading in the game.
  * 
  * @example const trader = new StockTrader(ns)
  */
 export class StockTrader {
-    #logger
     #ns
 
     /**
@@ -16,7 +12,6 @@ export class StockTrader {
      */
     constructor (ns) {
         this.#ns = ns
-        this.#logger = new Logger(ns)
 
         this.commissionFee = 100000
         this.openLongThreshold = .55
@@ -27,8 +22,8 @@ export class StockTrader {
      * Trade stocks on World Stock Exchange.
      * Currently does not support shorting.
      * 
-     * @param {number} [openLongThreshold=.55]  - The forecast threshold to get past to go long on stock
-     * @param {number} [closeLongThreshold=.50] - The forecast threshold to get past to close open longs
+     * @param {Threshold_n} [openLongThreshold=.55]  - The forecast threshold to get past to go long on stock
+     * @param {Threshold_n} [closeLongThreshold=.50] - The forecast threshold to get past to close open longs
      */
     trade(openLongThreshold = .55, closeLongThreshold = .50) {
         const symbols = this.#ns.stock.getSymbols()
@@ -49,16 +44,16 @@ export class StockTrader {
                 const cost = availableShares * price
                 if (cost < availableCash) {
                     const avgOpenPrice = this.#ns.stock.buyStock(symbol, availableShares)
-                    this.#logger.info(`Bought ${availableShares} shares for ${this.#ns.format.number(avgOpenPrice, 2)} per share in ${symbol}`)
+                    this.#ns.print(`INFO: Bought ${availableShares} shares for ${this.#ns.format.number(avgOpenPrice, 2)} per share in ${symbol}`)
                 }
             // The forecast tells us to sell our inventory for the stock.
             } else if (forecast <= closeLongThreshold && myShares > 0) {
                 const avgClosePrice = this.#ns.stock.sellStock(symbol, myShares)
                 const profit = (avgClosePrice - avgMySharePrice) * myShares - this.commissionFee
                 if (profit > 0) {
-                    this.#logger.success(`Closed ${myShares} shares in ${symbol} with a profit of ${this.#ns.format.number(profit, 2)}`)
+                    this.#ns.print(`SUCCESS: Closed ${myShares} shares in ${symbol} with a profit of ${this.#ns.format.number(profit, 2)}`)
                 } else {
-                    this.#logger.warn(`Closed ${myShares} shares in ${symbol} with a loss of ${this.#ns.format.number(profit, 2)}`)
+                    this.#ns.print(`WARN: Closed ${myShares} shares in ${symbol} with a loss of ${this.#ns.format.number(profit, 2)}`)
                 }
             }
         }

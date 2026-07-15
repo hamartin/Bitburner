@@ -7,8 +7,12 @@
 
 /** @param {NS} ns */
 export async function main(ns) {
-    const symbols = ns.stock.getSymbols()
+    if (!ns.stock.has4SDataTixApi()) {
+        ns.tprint(`WARN: You need to buy 4S data TIX API access before using this script.`)
+        ns.exit()
+    }
 
+    const symbols = ns.stock.getSymbols()
     for (const symbol of symbols) {
         const position = ns.stock.getPosition(symbol)
         const longShares = position[0]
@@ -16,14 +20,14 @@ export async function main(ns) {
 
         if (longShares > 0) {
             ns.stock.sellStock(symbol, longShares)
-            ns.tprint(`Sold LONG ${symbol} (${longShares} shares)`)
+            ns.tprint(`INFO: Sold LONG ${symbol} (${longShares} shares)`)
         }
 
         if (shortShares > 0) {
             ns.stock.buyShort(symbol, shortShares)
-            ns.tprint(`Covered SHORT ${symbol} (${shortShares} shares)`)
+            ns.tprint(`INFO: Covered SHORT ${symbol} (${shortShares} shares)`)
         }
     }
 
-    ns.tprint("All stock positions closed.")
+    ns.tprint("INFO: All stock positions closed.")
 }

@@ -124,3 +124,7 @@
  * @property {TreeNode | null} parent
  * @property {TreeNode[]} children
  */
+
+/**
+ * @typedef {number} Threshold_n
+ */

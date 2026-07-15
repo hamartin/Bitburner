@@ -1,6 +1,3 @@
-import { Logger } from "./logger"
-
-
 /**
  * A class to help with the cloud servers.
  * 
@@ -8,18 +5,16 @@ import { Logger } from "./logger"
  * @example const cloudServers = new CloudServers(ns, "SomeCoolName-")
  */
 export class CloudServers {
-    #logger
     #ns
 
     /**
-     * @param {NS} ns             - Netscript context
-     * @param {string} namePrefix - The name of the cloud servers with numbering postfixed to it.
+     * @param {NS} ns                        - Netscript context
+     * @param {string} [namePrefix="Vogon-"] - The name of the cloud servers with numbering postfixed to it.
      * @example const cloudServers = new CloudServers(ns)
      * @example const cloudServers = new CloudServers(ns, "SomeCoolName-")
      */
     constructor (ns, namePrefix = "Vogon-") {
         this.#ns = ns
-        this.#logger = new Logger(ns)
 
         this.namePrefix = namePrefix
         // The different amount of RAM you can have on a cloud purchased server. We are
@@ -43,7 +38,7 @@ export class CloudServers {
         if (this.#ns.getServerMoneyAvailable(this.#ns.getHostname()) > cost) {
             const hostName = this.namePrefix + this.#ns.cloud.getServerNames().length
             this.#ns.cloud.purchaseServer(hostName, this.ramTiers[0])
-            this.#logger.info(`Bought new server ${hostName} with ${this.ramTiers[0]}GB`)
+            this.#ns.print(`INFO: Bought new server ${hostName} with ${this.ramTiers[0]}GB`)
         }
     }
 
@@ -107,7 +102,7 @@ export class CloudServers {
         const cost = this.#ns.cloud.getServerUpgradeCost(hostName, nextRamTier)
         if (this.#ns.getServerMoneyAvailable(this.#ns.getHostname()) > cost) {
             this.#ns.cloud.upgradeServer(hostName, nextRamTier)
-            this.#logger.info(`Upgraded RAM on ${hostName} from ${this.#ns.format.ram(ramTier, 2)} to ${this.#ns.format.ram(nextRamTier, 2)}`)
+            this.#ns.print(`INFO: Upgraded RAM on ${hostName} from ${this.#ns.format.ram(ramTier, 2)} to ${this.#ns.format.ram(nextRamTier, 2)}`)
         }
         return true
     }

@@ -1,9 +1,11 @@
-import { CloudServers } from "./src/cloudserver.js"
-import { Logger } from "./src/logger"
+import { CloudServers } from "../src/cloudservers"
 
 
 /**
- * @typedef {{ sleepTime: Number, help: Boolean }} MyFlags
+ * @typedef {{
+ *      sleepTime: Number,
+ *      help: Boolean
+ * }} MyFlags
  */
 
 /** @param {NS} ns */
@@ -19,11 +21,10 @@ export async function main(ns) {
     ns.clearLog()
 
     const cloudServers = new CloudServers(ns)
-    const logger = new Logger(ns)
 
     if (flags.help) {
-        logger.info(`Usage: run ${ns.getScriptName()} --sleepTime <TIME>`)
-        logger.info("\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.")
+        ns.print(`INFO: Usage: run ${ns.getScriptName()} --sleepTime <TIME>`)
+        ns.print("INFO:\t--sleepTime -> Optional and defaults to 1000 equalling 1 second.")
         return
     }
 
@@ -43,5 +44,5 @@ export async function main(ns) {
         }
         await ns.sleep(flags.sleepTime)
     }
-    logger.info("All purchased servers are maxed out. Exiting script.")
+    ns.print("INFO: All purchased servers are maxed out. Exiting script.")
 }
