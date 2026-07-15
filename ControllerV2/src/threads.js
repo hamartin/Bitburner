@@ -2,18 +2,21 @@
  * A class which is designed to be used as a singleton and handles all
  * threads specific stuff.
  * 
- * @example const threads = new Threads(ns)
+ * @example const threads = new Threads(ns, .1)
  */
 export class Threads {
     // Private member
     #ns
+    #hackPercentage
 
     /**
-     * @param {NS} ns - Netscript context
-     * @example const threads = new Threads(ns)
+     * @param {NS} ns                 - Netscript context
+     * @param {number} hackPercentage - The percentage of the host current available money to hack
+     * @example const threads = new Threads(ns, .1)
      */
-    constructor (ns) {
+    constructor (ns, hackPercentage) {
         this.#ns = ns
+        this.#hackPercentage = hackPercentage
     }
 
     toString() {
@@ -47,5 +50,46 @@ export class Threads {
      */
     getNumberOfBatchesAHostCanRun(stats, ramNeeded) {
         return this.getNumberOfThreadsAHostCanRun(stats, ramNeeded)
+    }
+
+    /**
+     * Returns the number of threads we need to run for each stage to get to its
+     * base levels.
+     * 
+     * @param {ServerName_s} targetServerName - The host name of the server to attack
+     * @returns {Threads_o}                 - Dictionary thing where the keys are the stages and values are the number of threads needed
+     */
+    getHGWThreads(targetServerName) {
+        const baseHackPercent = this.#ns.hackAnalyze(targetServerName)
+        const baseWeakenPower = this.#ns.weakenAnalyze(1)
+        const currentSecurity = this.#ns.getServerSecurityLevel(targetServerName)
+        const minimumSecurity = this.#ns.getServerMinSecurityLevel(targetServerName)
+        const currentMoney    = this.#ns.getServerMoneyAvailable(targetServerName)
+        const maxMoney        = this.#ns.getServerMaxMoney(targetServerName)
+
+        const securityLevelsToRemove = currentSecurity - minimumSecurity
+        const growFactor = maxMoney / Math.max(currentMoney, 1)
+
+        // Needed for prepping
+        const weakenToMinThreads = Math.ceil(securityLevelsToRemove / baseWeakenPower)
+        const growToMaxThreads = Math.ceil(this.#ns.growthAnalyze(targetServerName, growFactor))
+        const weakenGrowToMaxThreads = Math.ceil((growToMaxThreads * 0.004) / baseWeakenPower)
+
+        // Needed for normal batching
+        const hackThreads = Math.floor(this.#hackPercentage / baseHackPercent)
+        const weakenHackThreads = Math.ceil((hackThreads * 0.002) / baseWeakenPower)
+        const growThreads = Math.ceil(this.#ns.growthAnalyze(targetServerName, 1 / (1 - this.#hackPercentage)))
+        const weakenGrowThreads = Math.ceil((growThreads * 0.004) / baseWeakenPower)
+
+        return {
+            hackThreads: hackThreads,
+            weakenHackThreads: weakenHackThreads,
+            growThreads: growThreads,
+            weakenGrowThreads: weakenGrowThreads,
+
+            weakenToMinThreads: weakenToMinThreads,
+            growToMaxThreads: growToMaxThreads,
+            weakenGrowToMaxThreads: weakenGrowToMaxThreads,
+        }
     }
 }

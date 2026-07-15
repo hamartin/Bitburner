@@ -25,7 +25,7 @@ export class Network {
      * run on and scan all servers in the network, returning a list of
      * all servers found.
      * 
-     * @returns {HostNames_l} - A list of hostnames for hosts we can see on the network
+     * @returns {ServerNames_l} - A list of hostnames for hosts we can see on the network
      * @example const hostNames = network.getHostNames()
      */
     getHostNames() {
@@ -49,7 +49,7 @@ export class Network {
      * Returns a list of host names where each host has been rooted and is ready
      * to be used.
      * 
-     * @returns {HostNames_l} - Returns a list of host names where the host has been rooted.
+     * @returns {ServerNames_l} - Returns a list of host names where the host has been rooted.
      */
     getRootedHostNames() {
         return this.getHostNames().filter(h => this.#ns.hasRootAccess(h))

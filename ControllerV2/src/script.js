@@ -33,7 +33,7 @@ export class Script {
             ns.exit()
         }
         /** @type {RAM_n} */
-        this.requiredRam = ns.getScriptRam(`${this.pathAndFileName}`)
+        this.requiredRAM = ns.getScriptRam(`${this.pathAndFileName}`)
     }
 
     toString() {
@@ -43,7 +43,7 @@ export class Script {
     /**
      * Returns true if the destination host allready has the file, else false.
      * 
-     * @param {HostName_s} hostName 
+     * @param {ServerName_s} hostName 
      * @returns {boolean}
      */
     serverHasScript(hostName) {
@@ -53,7 +53,7 @@ export class Script {
     /**
      * Copes itself to the destination hostName.
      * 
-     * @param {HostName_s} hostName 
+     * @param {ServerName_s} hostName 
      */
     copyToServer(hostName) {
         this.#ns.scp(this.pathAndFileName, hostName)
@@ -62,7 +62,7 @@ export class Script {
     /**
      * Executes the script this object has "responsebility" for.
      * 
-     * @param {HostName_s} sourceHostName - Host name of the server to run the script on
+     * @param {ServerName_s} sourceHostName - Host name of the server to run the script on
      * @param {Threads_n} threads         - How many threads to run for the script
      * @param {...string} args            - Any additional arguments needed to pass to the script
      */
